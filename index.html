@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="google-site-verification" content="ca-pub-2837173229911395" />
+  <meta charset="UTF-8" />
+  <title>Square Game - CPU Mode</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #2b2b2b; }
+    .grid-board-container, .instructions-box { background-color: #1a1a1a; }
+    .last-move {
+      position: relative;
+    }
+    .last-move::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 150%;
+      height: 150%;
+      background: none;
+      border: 8px solid rgba(192, 192, 192, 0.9);
+      border-radius: 50%;
+      box-shadow: 0 0 20px 8px rgba(192, 192, 192, 0.8);
+      transform: translate(-50%, -50%);
+      opacity: 1;
+      animation: fadeOutRing 3s forwards;
+      pointer-events: none;
+      z-index: 5;
+    }
+    @keyframes fadeOutRing {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .dot {
+      position: absolute;
+      width: 4vw;
+      height: 4vw;
+      max-width: 30px;
+      max-height: 30px;
+      border-radius: 50%;
+      background-color: white;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 2;
+      box-shadow: inset -6px -6px 12px rgba(0, 0, 0, 0.7), inset 6px 6px 12px rgba(255, 255, 255, 0.3);
+      transition: all 0.18s ease-in-out;
+    }
+    .dot:hover {
+      box-shadow: inset -6px -6px 14px rgba(0, 0, 0, 0.7), inset 6px 6px 14px rgba(255, 255, 255, 0.3), 0 0 8px rgba(255, 255, 255, 0.5);
+    }
+    .dot:active {
+      box-shadow: inset -8px -8px 16px rgba(0, 0, 0, 0.7), inset 8px 8px 16px rgba(255, 255, 255, 0.3), 0 0 10px rgba(255, 255, 255, 0.6);
+    }
+    .dot.player1 {
+      background: linear-gradient(145deg, #007BFF, #00BFFF);
+    }
+    .dot.player2 {
+      background: linear-gradient(145deg, #FF0000, #FF6347);
+    }
+    .line {
+      position: absolute;
+      transform-origin: left center;
+      z-index: 1;
+    }
+    .line.player1 { background-color: rgba(59, 130, 246, 0.5); }
+    .line.player2 { background-color: rgba(239, 68, 68, 0.5); }
+    .active {
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+      transform: scale(1.05);
+    }
+    .grid-board-container {
+      position: relative;
+      width: 90vw;
+      height: 90vw;
+      max-width: 720px;
+      max-height: 720px;
+      overflow: hidden;
+    }
+    .grid-container { position: relative; }
+    .mode-buttons { margin-bottom: 20px; }
+    .mode-button {
+      background: linear-gradient(145deg, #1e3c72, #2a5298);
+      color: white;
+      padding: 10px 20px;
+      margin: 0 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 2px solid #eee;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      filter: brightness(50%);
+    }
+    .mode-button.cpu {
+      background: linear-gradient(145deg, #8b0000, #ff0000);
+    }
+    .mode-button.active {
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+      transform: scale(1.05);
+      filter: brightness(100%);
+    }
+    /* Dim non-active player cards */
+    .player-card {
+      filter: brightness(50%);
+      transition: filter 0.3s ease;
+      width: 192px;
+    }
+    .player-card.active {
+      filter: brightness(100%);
+      transform: none;
+    }
+  </style>
+  <!-- AdSense Global Site Tag -->
+  <script async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2837173229911395"
+          crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="flex justify-center mode-buttons">
+    <button id="pvpMode" class="mode-button active">Player vs Player</button>
+    <button id="cpuMode" class="mode-button cpu">Player vs CPU</button>
+  </div>
+  <div id="difficultyButtons" class="hidden flex justify-center mt-2">
+    <button id="difficultyEasy" data-value="easy" class="mode-button ml-4" style="background: linear-gradient(145deg, #007BFF, #00BFFF);">Easy</button>
+    <button id="difficultyMedium" data-value="medium" class="mode-button ml-4 active" style="background: linear-gradient(145deg, #007BFF, #FF0000);">Medium</button>
+    <button id="difficultyHard" data-value="hard" class="mode-button ml-4" style="background: linear-gradient(145deg, #FF0000, #FF6347);">Hard</button>
+  </div>
+  <div id="pvpSettings" class="hidden flex justify-center mt-2">
+    <label class="text-white ml-4">
+      <input type="checkbox" id="alternateStart" class="mr-2"/>
+      Alternate Starting Player
+    </label>
+  </div>
+  <div class="flex flex-col items-center">
+    <div class="flex justify-between mb-8 w-full max-w-3xl">
+      <div id="player1Card" class="player-card bg-gradient-to-br from-blue-500 to-blue-700 p-4 text-white text-center active">
+        <h2 class="text-xl font-bold">Player 1</h2>
+        <p class="text-3xl font-bold mt-2" id="player1Score">0</p>
+        <div id="player1Timer" class="turn-timer text-white mt-2 hidden">Turn time: 00:00</div>
+      </div>
+      <div class="player-card active w-48 bg-white bg-opacity-10 rounded-lg p-3 text-white text-center">
+        <p id="gameStatus" class="font-medium">Player 1's Turn</p>
+        <button id="resetButton" class="mt-2 bg-white text-gray-800 px-4 py-1 rounded-full font-medium hover:bg-gray-100 transition">Reset Game</button>
+      </div>
+      <div id="player2Card" class="player-card bg-gradient-to-br from-red-500 to-red-700 p-4 text-white text-center">
+        <h2 class="text-xl font-bold">Player 2</h2>
+        <p class="text-3xl font-bold mt-2" id="player2Score">0</p>
+        <div id="player2Timer" class="turn-timer text-white mt-2 hidden">Turn time: 00:00</div>
+      </div>
+    </div>
+  </div>
+  <div class="flex justify-center mb-6">
+    <div class="bg-black bg-opacity-20 rounded-lg p-6 grid-board-container">
+      <div id="gridContainer" class="grid-container"></div>
+    </div>
+  </div>
+  <!-- AdSense Ad Unit -->
+  <div class="ad-slot" style="margin: 20px auto; text-align: center;">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-2837173229911395"
+         data-ad-slot="YYYYYYYYYY"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  </div>
+  <div class="text-white text-center bg-black bg-opacity-20 p-4 rounded-lg instructions-box w-5/6 mx-auto">
+    <h3 class="font-bold mb-2">How to Play</h3>
+    <p>Players take turns selecting dots. When a player's selections form a square of any size, they earn points based on the square size.</p>
+    <p class="mt-2"><span class="font-bold">Scoring:</span> 1×1 square = 1 point, 2×2 square = 4 points, 3×3 square = 9 points, etc.</p>
+    <p class="mt-2"><span class="font-bold">Game End:</span> The game ends when all dots are selected.</p>
+  </div>
+<!-- Popup message for end of round -->
+<div id="popupMessage" class="fixed inset-0 flex items-center justify-center hidden z-50">
+  <div class="rounded-lg p-6 text-center text-white" style="background: linear-gradient(145deg, #FF0000, #007BFF); box-shadow: 0 0 40px rgba(255, 255, 255, 0.5); transform: scale(1.3);">
+    <p class="text-white text-xl font-bold mb-4">Play Again</p>
+    <button id="popupButton" class="bg-black text-white px-4 py-2 rounded">OK</button>
+  </div>
+</div>
+<script>
+
+
+// Full JavaScript logic with the correct click handler
+const gridSize = 8;
+let spacing = 80;
+const dotSize = 20;
+const lineThickness = 6;
+let currentPlayer = 1;
+let scores = [0, 0];
+let selectedDots = [];
+let lines = [];
+let totalDots = gridSize * gridSize;
+let selectedDotCount = 0;
+let mode = "pvp";
+let turnStartTime = Date.now();
+let timerInterval;
+let difficulty = "medium";
+let alternateStart = false;
+let lastStartingPlayer = 2;
+
+const gridContainer = document.getElementById('gridContainer');
+const player1Score = document.getElementById('player1Score');
+const player2Score = document.getElementById('player2Score');
+const player1Card = document.getElementById('player1Card');
+const player2Card = document.getElementById('player2Card');
+const gameStatus = document.getElementById('gameStatus');
+const resetButton = document.getElementById('resetButton');
+const player1Timer = document.getElementById('player1Timer');
+const player2Timer = document.getElementById('player2Timer');
+const pvpMode = document.getElementById('pvpMode');
+const cpuMode = document.getElementById('cpuMode');
+const pvpSettings = document.getElementById('pvpSettings');
+const alternateStartCheckbox = document.getElementById('alternateStart');
+
+alternateStartCheckbox.addEventListener('change', () => {
+  alternateStart = alternateStartCheckbox.checked;
+});
+
+function createGrid() {
+  gridContainer.innerHTML = '';
+  selectedDots = [];
+  lines = [];
+  selectedDotCount = 0;
+  scores = [0, 0];
+  player1Score.textContent = "0";
+  player2Score.textContent = "0";
+  if (mode === "pvp" && alternateStart) {
+    // Alternate starting player between games
+    currentPlayer = (lastStartingPlayer === 1) ? 2 : 1;
+    lastStartingPlayer = currentPlayer;
+  } else {
+    currentPlayer = 1;
+  }
+
+  const boardSize = gridContainer.clientWidth;
+  spacing = boardSize / (gridSize - 1);
+
+  gridContainer.style.width = `${(gridSize - 1) * spacing}px`;
+  gridContainer.style.height = `${(gridSize - 1) * spacing}px`;
+
+  for (let y = 0; y < gridSize; y++) {
+    for (let x = 0; x < gridSize; x++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.style.left = `${x * spacing}px`;
+      dot.style.top = `${y * spacing}px`;
+      dot.dataset.x = x;
+      dot.dataset.y = y;
+      dot.dataset.id = `${x}-${y}`;
+      dot.addEventListener('click', function () {
+        if (!this.classList.contains('player1') && !this.classList.contains('player2')) {
+          if (mode === "pvp" || (mode === "cpu" && currentPlayer === 1)) {
+            this.classList.add(`player${currentPlayer}`);
+            clearLastMoveHighlight();
+            this.classList.add('last-move');
+            setTimeout(() => {
+              this.classList.remove('last-move');
+            }, 2000);
+            selectedDotCount++;
+            selectedDots.push({ x: parseInt(this.dataset.x), y: parseInt(this.dataset.y), id: this.dataset.id, player: currentPlayer });
+            checkForSquares();
+            if (selectedDotCount === totalDots) {
+              // Show “Play Again” popup
+              document.getElementById('popupMessage').classList.remove('hidden');
+            } else {
+              currentPlayer = currentPlayer === 1 ? 2 : 1;
+              updatePlayerTurn();
+              resetTurnTimer();
+              if (mode === "cpu" && currentPlayer === 2) {
+                setTimeout(cpuMove, 500);
+              }
+            }
+          }
+        }
+      });
+      gridContainer.appendChild(dot);
+    }
+  }
+  updatePlayerTurn();
+}
+function wouldMakeSquare(x, y, player) {
+  // Build a list of existing dots for the given player
+  const dots = selectedDots
+    .filter(d => d.player === player)
+    .map(d => ({ x: d.x, y: d.y, id: d.id }));
+  // Simulate adding the new dot at (x, y)
+  dots.push({ x, y, id: `${x}-${y}` });
+  // Check all combinations of 4 dots to see if they form a square that includes (x, y)
+  for (let i = 0; i < dots.length; i++) {
+    for (let j = i + 1; j < dots.length; j++) {
+      for (let k = j + 1; k < dots.length; k++) {
+        for (let l = k + 1; l < dots.length; l++) {
+          const quad = [dots[i], dots[j], dots[k], dots[l]];
+          if (
+            isSquare(quad) &&
+            quad.some(d => d.x === x && d.y === y) // ensure (x,y) is part of that square
+          ) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
+function cpuMove() {
+  const availableDots = [...document.querySelectorAll('.dot:not(.player1):not(.player2)')];
+  if (availableDots.length === 0) return;
+  
+  let chosenDot;
+  if (difficulty === "easy") {
+    // Easy: pick any available dot at random
+    chosenDot = availableDots[Math.floor(Math.random() * availableDots.length)];
+  } else if (difficulty === "medium") {
+    // Medium: look for a dot that blocks Player 1 from completing a square; otherwise random
+    let blockDot = null;
+    for (const dot of availableDots) {
+      const x = parseInt(dot.dataset.x);
+      const y = parseInt(dot.dataset.y);
+      if (wouldMakeSquare(x, y, 1)) {
+        blockDot = dot;
+        break;
+      }
+    }
+    if (blockDot) {
+      chosenDot = blockDot;
+    } else {
+      chosenDot = availableDots[Math.floor(Math.random() * availableDots.length)];
+    }
+  } else if (difficulty === "hard") {
+    // Hard: first see if CPU (Player 2) can complete a square; if not, block Player 1; otherwise random
+    let winDot = null;
+    for (const dot of availableDots) {
+      const x = parseInt(dot.dataset.x);
+      const y = parseInt(dot.dataset.y);
+      if (wouldMakeSquare(x, y, 2)) {
+        winDot = dot;
+        break;
+      }
+    }
+    if (winDot) {
+      chosenDot = winDot;
+    } else {
+      // no immediate win, so block Player 1 if they can win next turn
+      let blockDot = null;
+      for (const dot of availableDots) {
+        const x = parseInt(dot.dataset.x);
+        const y = parseInt(dot.dataset.y);
+        if (wouldMakeSquare(x, y, 1)) {
+          blockDot = dot;
+          break;
+        }
+      }
+      if (blockDot) {
+        chosenDot = blockDot;
+      } else {
+        chosenDot = availableDots[Math.floor(Math.random() * availableDots.length)];
+      }
+    }
+  }
+
+  chosenDot.classList.add('player2');
+  clearLastMoveHighlight();
+  chosenDot.classList.add('last-move');
+  setTimeout(() => {
+    chosenDot.classList.remove('last-move');
+  }, 2000);
+  selectedDotCount++;
+  selectedDots.push({ x: parseInt(chosenDot.dataset.x), y: parseInt(chosenDot.dataset.y), id: chosenDot.dataset.id, player: 2 });
+  checkForSquares();
+  if (selectedDotCount === totalDots) {
+    // Show “Play Again” popup
+    document.getElementById('popupMessage').classList.remove('hidden');
+    return;
+  }
+  currentPlayer = 1;
+  updatePlayerTurn();
+  resetTurnTimer();
+}
+function clearLastMoveHighlight() {
+  document.querySelectorAll('.last-move').forEach(dot => {
+    dot.classList.remove('last-move');
+  });
+}
+function checkForSquares() {
+  const playerDots = selectedDots.filter(dot => dot.player === currentPlayer);
+  if (playerDots.length < 4) return;
+
+  for (let i = 0; i < playerDots.length; i++) {
+    for (let j = i + 1; j < playerDots.length; j++) {
+      for (let k = j + 1; k < playerDots.length; k++) {
+        for (let l = k + 1; l < playerDots.length; l++) {
+          const dots = [playerDots[i], playerDots[j], playerDots[k], playerDots[l]];
+          if (isSquare(dots)) {
+            const squareKey = dots.map(d => d.id).sort().join(',');
+            if (!lines.includes(squareKey)) {
+              lines.push(squareKey);
+              const sideLength = Math.sqrt((dots[0].x - dots[1].x) ** 2 + (dots[0].y - dots[1].y) ** 2);
+              const points = Math.round(sideLength * sideLength);
+              scores[currentPlayer - 1] += points;
+              player1Score.textContent = scores[0];
+              player2Score.textContent = scores[1];
+              drawSquare(dots);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+function isSquare(dots) {
+  const [a, b, c, d] = dots;
+  const dist = (p1, p2) => Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
+  const dists = [
+    dist(a, b), dist(a, c), dist(a, d),
+    dist(b, c), dist(b, d), dist(c, d)
+  ].sort((x, y) => x - y);
+  return dists[0] > 0 &&
+         dists[0] === dists[1] &&
+         dists[1] === dists[2] &&
+         dists[2] === dists[3] &&
+         dists[4] === dists[5] &&
+         dists[4] === 2 * dists[0];
+}
+function drawSquare(dots) {
+  const sortedDots = sortDotsInOrder(dots);
+  for (let i = 0; i < sortedDots.length; i++) {
+    const dot1 = sortedDots[i];
+    const dot2 = sortedDots[(i + 1) % sortedDots.length];
+    drawLine(dot1, dot2);
+  }
+}
+function sortDotsInOrder(dots) {
+  const centerX = dots.reduce((sum, dot) => sum + dot.x, 0) / dots.length;
+  const centerY = dots.reduce((sum, dot) => sum + dot.y, 0) / dots.length;
+  return [...dots].sort((a, b) => {
+    const angleA = Math.atan2(a.y - centerY, a.x - centerX);
+    const angleB = Math.atan2(b.y - centerY, b.x - centerX);
+    return angleA - angleB;
+  });
+}
+function drawLine(dot1, dot2) {
+  const x1 = dot1.x * spacing;
+  const y1 = dot1.y * spacing;
+  const x2 = dot2.x * spacing;
+  const y2 = dot2.y * spacing;
+  const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+  const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+  const line = document.createElement('div');
+  line.className = `line player${currentPlayer}`;
+  line.style.width = `${length}px`;
+  line.style.height = `${lineThickness}px`;
+  line.style.left = `${x1}px`;
+  line.style.top = `${y1}px`;
+  line.style.transform = `rotate(${angle}deg)`;
+  gridContainer.appendChild(line);
+}
+function startTurnTimer() {
+  turnStartTime = Date.now();
+  updateTimerDisplay();
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimerDisplay, 1000);
+}
+function resetTurnTimer() {
+  turnStartTime = Date.now();
+  updateTimerDisplay();
+}
+function updateTimerDisplay() {
+  const elapsedTime = Date.now() - turnStartTime;
+  const seconds = Math.floor((elapsedTime / 1000) % 60);
+  const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+  const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  player1Timer.classList.add('hidden');
+  player2Timer.classList.add('hidden');
+  if (currentPlayer === 1) {
+    player1Timer.textContent = formattedTime;
+    player1Timer.classList.remove('hidden');
+  } else {
+    player2Timer.textContent = formattedTime;
+    player2Timer.classList.remove('hidden');
+  }
+}
+function updatePlayerTurn() {
+  player1Card.classList.toggle('active', currentPlayer === 1);
+  player2Card.classList.toggle('active', currentPlayer === 2);
+  gameStatus.textContent = `Player ${currentPlayer}'s Turn`;
+}
+resetButton.addEventListener('click', () => {
+  createGrid();
+  startTurnTimer();
+});
+// Add pvpSettings show/hide on mode switch
+pvpMode.addEventListener('click', () => {
+  mode = "pvp";
+  pvpMode.classList.add('active');
+  cpuMode.classList.remove('active');
+  pvpSettings.classList.remove('hidden');
+  createGrid();
+  startTurnTimer();
+});
+cpuMode.addEventListener('click', () => {
+  mode = "cpu";
+  cpuMode.classList.add('active');
+  pvpMode.classList.remove('active');
+  pvpSettings.classList.add('hidden');
+  createGrid();
+  startTurnTimer();
+});
+createGrid();
+startTurnTimer();
+
+// Show/hide difficulty buttons when switching modes
+const difficultyButtons = document.getElementById('difficultyButtons');
+const difficultyEasy = document.getElementById('difficultyEasy');
+const difficultyMedium = document.getElementById('difficultyMedium');
+const difficultyHard = document.getElementById('difficultyHard');
+
+// Clicking a difficulty button sets 'difficulty' and updates active styling
+[difficultyEasy, difficultyMedium, difficultyHard].forEach(btn => {
+  btn.addEventListener('click', () => {
+    difficulty = btn.dataset.value;
+    [difficultyEasy, difficultyMedium, difficultyHard].forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// Modify existing mode listeners to show/hide difficulty selector
+pvpMode.addEventListener('click', () => {
+  mode = "pvp";
+  pvpMode.classList.add('active');
+  cpuMode.classList.remove('active');
+  // Hide difficulty buttons in PVP mode
+  difficultyButtons.classList.add('hidden');
+  createGrid();
+  startTurnTimer();
+});
+
+cpuMode.addEventListener('click', () => {
+  mode = "cpu";
+  cpuMode.classList.add('active');
+  pvpMode.classList.remove('active');
+  // Show difficulty buttons when CPU mode is selected
+  difficultyButtons.classList.remove('hidden');
+  createGrid();
+  startTurnTimer();
+});
+
+</script>
+<script>
+// Popup "Play Again" button listener
+const popupButton = document.getElementById('popupButton');
+popupButton.addEventListener('click', () => {
+  document.getElementById('popupMessage').classList.add('hidden');
+  createGrid();
+  startTurnTimer();
+});
+</script>
+</body>
+</html>
+</html>
