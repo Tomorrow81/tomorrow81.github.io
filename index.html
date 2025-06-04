@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="google-site-verification" content="ca-pub-2837173229911395" />
   <meta charset="UTF-8" />
   <title>Square Game - CPU Mode</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -48,24 +47,31 @@
       transition: all 0.18s ease-in-out;
     }
     .dot:hover {
-      box-shadow: inset -6px -6px 14px rgba(0, 0, 0, 0.7), inset 6px 6px 14px rgba(255, 255, 255, 0.3), 0 0 8px rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.4), 0 0 10px rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
     }
     .dot:active {
       box-shadow: inset -8px -8px 16px rgba(0, 0, 0, 0.7), inset 8px 8px 16px rgba(255, 255, 255, 0.3), 0 0 10px rgba(255, 255, 255, 0.6);
     }
     .dot.player1 {
-      background: linear-gradient(145deg, #007BFF, #00BFFF);
+      background: linear-gradient(145deg, #00C6FF, #0072FF);
     }
     .dot.player2 {
-      background: linear-gradient(145deg, #FF0000, #FF6347);
+      background: linear-gradient(145deg, #FF416C, #FF4B2B);
     }
     .line {
       position: absolute;
       transform-origin: left center;
       z-index: 1;
     }
-    .line.player1 { background-color: rgba(59, 130, 246, 0.5); }
-    .line.player2 { background-color: rgba(239, 68, 68, 0.5); }
+    .line.player1 {
+      background-color: rgba(0, 198, 255, 0.7);
+      box-shadow: 0 0 6px rgba(0, 198, 255, 0.7);
+    }
+    .line.player2 {
+      background-color: rgba(255, 65, 108, 0.7);
+      box-shadow: 0 0 6px rgba(255, 65, 108, 0.7);
+    }
     .active {
       box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
       transform: scale(1.05);
@@ -77,6 +83,7 @@
       max-width: 720px;
       max-height: 720px;
       overflow: hidden;
+      background: radial-gradient(circle, rgba(50,50,50,0.8) 0%, rgba(0,0,0,1) 100%);
     }
     .grid-container { position: relative; }
     .mode-buttons { margin-bottom: 20px; }
@@ -90,7 +97,7 @@
       border: 2px solid #eee;
       font-size: 16px;
       transition: all 0.3s ease;
-      filter: brightness(50%);
+      filter: brightness(70%);
     }
     .mode-button.cpu {
       background: linear-gradient(145deg, #8b0000, #ff0000);
@@ -98,33 +105,41 @@
     .mode-button.active {
       box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
       transform: scale(1.05);
-      filter: brightness(100%);
+      filter: brightness(120%);
     }
     /* Dim non-active player cards */
     .player-card {
-      filter: brightness(50%);
+      filter: brightness(65%);
       transition: filter 0.3s ease;
       width: 192px;
     }
     .player-card.active {
-      filter: brightness(100%);
+      filter: brightness(115%);
       transform: none;
+      border: 2px solid #fff;
+      box-shadow: 0 0 10px rgba(255,255,255,0.7);
+    }
+
+    /* Popup overlay and animation */
+    #popupMessage {
+      background-color: rgba(0, 0, 0, 0.5); /* semi-transparent overlay */
+      transition: opacity 0.5s ease;
+      opacity: 0;
+    }
+    #popupMessage.show {
+      opacity: 1;
     }
   </style>
-  <!-- AdSense Global Site Tag -->
-  <script async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2837173229911395"
-          crossorigin="anonymous"></script>
 </head>
 <body>
   <div class="flex justify-center mode-buttons">
-    <button id="pvpMode" class="mode-button active">Player vs Player</button>
-    <button id="cpuMode" class="mode-button cpu">Player vs CPU</button>
+    <button id="pvpMode" class="mode-button active" aria-label="Start Player vs Player Mode">Player vs Player</button>
+    <button id="cpuMode" class="mode-button cpu" aria-label="Start Player vs CPU Mode">Player vs CPU</button>
   </div>
   <div id="difficultyButtons" class="hidden flex justify-center mt-2">
-    <button id="difficultyEasy" data-value="easy" class="mode-button ml-4" style="background: linear-gradient(145deg, #007BFF, #00BFFF);">Easy</button>
-    <button id="difficultyMedium" data-value="medium" class="mode-button ml-4 active" style="background: linear-gradient(145deg, #007BFF, #FF0000);">Medium</button>
-    <button id="difficultyHard" data-value="hard" class="mode-button ml-4" style="background: linear-gradient(145deg, #FF0000, #FF6347);">Hard</button>
+    <button id="difficultyEasy" data-value="easy" class="mode-button ml-4" style="background: linear-gradient(145deg, #007BFF, #00BFFF);" aria-label="Set difficulty to Easy">Easy</button>
+    <button id="difficultyMedium" data-value="medium" class="mode-button ml-4 active" style="background: linear-gradient(145deg, #007BFF, #FF0000);" aria-label="Set difficulty to Medium">Medium</button>
+    <button id="difficultyHard" data-value="hard" class="mode-button ml-4" style="background: linear-gradient(145deg, #FF0000, #FF6347);" aria-label="Set difficulty to Hard">Hard</button>
   </div>
   <div id="pvpSettings" class="hidden flex justify-center mt-2">
     <label class="text-white ml-4">
@@ -141,7 +156,7 @@
       </div>
       <div class="player-card active w-48 bg-white bg-opacity-10 rounded-lg p-3 text-white text-center">
         <p id="gameStatus" class="font-medium">Player 1's Turn</p>
-        <button id="resetButton" class="mt-2 bg-white text-gray-800 px-4 py-1 rounded-full font-medium hover:bg-gray-100 transition">Reset Game</button>
+        <button id="resetButton" class="mt-2 bg-white text-gray-800 px-4 py-1 rounded-full font-medium hover:bg-gray-100 transition" aria-label="Reset Game">Reset Game</button>
       </div>
       <div id="player2Card" class="player-card bg-gradient-to-br from-red-500 to-red-700 p-4 text-white text-center">
         <h2 class="text-xl font-bold">Player 2</h2>
@@ -155,18 +170,6 @@
       <div id="gridContainer" class="grid-container"></div>
     </div>
   </div>
-  <!-- AdSense Ad Unit -->
-  <div class="ad-slot" style="margin: 20px auto; text-align: center;">
-    <ins class="adsbygoogle"
-         style="display:block"
-         data-ad-client="ca-pub-2837173229911395"
-         data-ad-slot="YYYYYYYYYY"
-         data-ad-format="auto"
-         data-full-width-responsive="true"></ins>
-    <script>
-      (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
-  </div>
   <div class="text-white text-center bg-black bg-opacity-20 p-4 rounded-lg instructions-box w-5/6 mx-auto">
     <h3 class="font-bold mb-2">How to Play</h3>
     <p>Players take turns selecting dots. When a player's selections form a square of any size, they earn points based on the square size.</p>
@@ -175,9 +178,10 @@
   </div>
 <!-- Popup message for end of round -->
 <div id="popupMessage" class="fixed inset-0 flex items-center justify-center hidden z-50">
-  <div class="rounded-lg p-6 text-center text-white" style="background: linear-gradient(145deg, #FF0000, #007BFF); box-shadow: 0 0 40px rgba(255, 255, 255, 0.5); transform: scale(1.3);">
-    <p class="text-white text-xl font-bold mb-4">Play Again</p>
-    <button id="popupButton" class="bg-black text-white px-4 py-2 rounded">OK</button>
+  <div class="rounded-lg p-6 text-center text-white transform transition-transform duration-500 scale-0"
+    style="background: linear-gradient(145deg, #FF0000, #007BFF); box-shadow: 0 0 40px rgba(255, 255, 255, 0.5);">
+    <p id="winnerAnnouncement" class="text-white text-2xl font-bold mb-4"></p>
+    <button id="popupButton" class="bg-black text-white px-4 py-2 rounded" aria-label="Confirm and Start New Game">Play Again</button>
   </div>
 </div>
 <script>
@@ -212,12 +216,7 @@ const player1Timer = document.getElementById('player1Timer');
 const player2Timer = document.getElementById('player2Timer');
 const pvpMode = document.getElementById('pvpMode');
 const cpuMode = document.getElementById('cpuMode');
-const pvpSettings = document.getElementById('pvpSettings');
-const alternateStartCheckbox = document.getElementById('alternateStart');
-
-alternateStartCheckbox.addEventListener('change', () => {
-  alternateStart = alternateStartCheckbox.checked;
-});
+// Removed alternateStartCheckbox and pvpSettings
 
 function createGrid() {
   gridContainer.innerHTML = '';
@@ -227,13 +226,9 @@ function createGrid() {
   scores = [0, 0];
   player1Score.textContent = "0";
   player2Score.textContent = "0";
-  if (mode === "pvp" && alternateStart) {
-    // Alternate starting player between games
-    currentPlayer = (lastStartingPlayer === 1) ? 2 : 1;
-    lastStartingPlayer = currentPlayer;
-  } else {
-    currentPlayer = 1;
-  }
+  // Automatically alternate starting player between games (always, not just for alternateStart)
+  currentPlayer = (lastStartingPlayer === 1) ? 2 : 1;
+  lastStartingPlayer = currentPlayer;
 
   const boardSize = gridContainer.clientWidth;
   spacing = boardSize / (gridSize - 1);
@@ -263,14 +258,40 @@ function createGrid() {
             selectedDots.push({ x: parseInt(this.dataset.x), y: parseInt(this.dataset.y), id: this.dataset.id, player: currentPlayer });
             checkForSquares();
             if (selectedDotCount === totalDots) {
-              // Show “Play Again” popup
-              document.getElementById('popupMessage').classList.remove('hidden');
+              // Show “Play Again” popup with winner announcement
+              const popupMessage = document.getElementById('popupMessage');
+              const winnerAnnouncement = document.getElementById('winnerAnnouncement');
+              popupMessage.classList.remove('hidden');
+              if (scores[0] > scores[1]) {
+                winnerAnnouncement.textContent = `🎉 Player 1 Wins with ${scores[0]} Points!`;
+              } else if (scores[1] > scores[0]) {
+                winnerAnnouncement.textContent = `🎉 Player 2 Wins with ${scores[1]} Points!`;
+              } else {
+                winnerAnnouncement.textContent = `🤝 It's a Tie! Both scored ${scores[0]} Points!`;
+              }
+              setTimeout(() => {
+                popupMessage.classList.add('show');
+                // Animate popup inner div
+                const popupInner = popupMessage.querySelector('div');
+                if (popupInner) {
+                  popupInner.classList.remove('scale-0');
+                  popupInner.classList.add('scale-100');
+                }
+              }, 10);
             } else {
               currentPlayer = currentPlayer === 1 ? 2 : 1;
               updatePlayerTurn();
               resetTurnTimer();
               if (mode === "cpu" && currentPlayer === 2) {
-                setTimeout(cpuMove, 500);
+                let delay;
+                if (difficulty === "easy") {
+                  delay = Math.random() * 1000 + 1500; // 1.5–2.5 sec
+                } else if (difficulty === "medium") {
+                  delay = Math.random() * 1000 + 1000; // 1–2 sec
+                } else {
+                  delay = Math.random() * 500 + 500;   // 0.5–1 sec
+                }
+                setTimeout(cpuMove, delay);
               }
             }
           }
@@ -310,56 +331,31 @@ function wouldMakeSquare(x, y, player) {
 function cpuMove() {
   const availableDots = [...document.querySelectorAll('.dot:not(.player1):not(.player2)')];
   if (availableDots.length === 0) return;
-  
+
   let chosenDot;
   if (difficulty === "easy") {
     // Easy: pick any available dot at random
     chosenDot = availableDots[Math.floor(Math.random() * availableDots.length)];
-  } else if (difficulty === "medium") {
-    // Medium: look for a dot that blocks Player 1 from completing a square; otherwise random
-    let blockDot = null;
+  } else {
+    // Medium and Hard: Use weighted strategy for blocking and winning
+    const blockCandidates = [];
+    const winCandidates = [];
     for (const dot of availableDots) {
       const x = parseInt(dot.dataset.x);
       const y = parseInt(dot.dataset.y);
-      if (wouldMakeSquare(x, y, 1)) {
-        blockDot = dot;
-        break;
-      }
+      if (wouldMakeSquare(x, y, 1)) blockCandidates.push(dot);
+      if (wouldMakeSquare(x, y, 2)) winCandidates.push(dot);
     }
-    if (blockDot) {
-      chosenDot = blockDot;
+
+    let blockChance = (difficulty === "medium") ? 0.6 : 0.85;
+    let winChance = (difficulty === "medium") ? 0.6 : 0.85;
+
+    if (winCandidates.length > 0 && Math.random() < winChance) {
+      chosenDot = winCandidates[Math.floor(Math.random() * winCandidates.length)];
+    } else if (blockCandidates.length > 0 && Math.random() < blockChance) {
+      chosenDot = blockCandidates[Math.floor(Math.random() * blockCandidates.length)];
     } else {
       chosenDot = availableDots[Math.floor(Math.random() * availableDots.length)];
-    }
-  } else if (difficulty === "hard") {
-    // Hard: first see if CPU (Player 2) can complete a square; if not, block Player 1; otherwise random
-    let winDot = null;
-    for (const dot of availableDots) {
-      const x = parseInt(dot.dataset.x);
-      const y = parseInt(dot.dataset.y);
-      if (wouldMakeSquare(x, y, 2)) {
-        winDot = dot;
-        break;
-      }
-    }
-    if (winDot) {
-      chosenDot = winDot;
-    } else {
-      // no immediate win, so block Player 1 if they can win next turn
-      let blockDot = null;
-      for (const dot of availableDots) {
-        const x = parseInt(dot.dataset.x);
-        const y = parseInt(dot.dataset.y);
-        if (wouldMakeSquare(x, y, 1)) {
-          blockDot = dot;
-          break;
-        }
-      }
-      if (blockDot) {
-        chosenDot = blockDot;
-      } else {
-        chosenDot = availableDots[Math.floor(Math.random() * availableDots.length)];
-      }
     }
   }
 
@@ -373,13 +369,30 @@ function cpuMove() {
   selectedDots.push({ x: parseInt(chosenDot.dataset.x), y: parseInt(chosenDot.dataset.y), id: chosenDot.dataset.id, player: 2 });
   checkForSquares();
   if (selectedDotCount === totalDots) {
-    // Show “Play Again” popup
-    document.getElementById('popupMessage').classList.remove('hidden');
+    const popupMessage = document.getElementById('popupMessage');
+    const winnerAnnouncement = document.getElementById('winnerAnnouncement');
+    popupMessage.classList.remove('hidden');
+    if (scores[0] > scores[1]) {
+      winnerAnnouncement.textContent = `🎉 Player 1 Wins with ${scores[0]} Points!`;
+    } else if (scores[1] > scores[0]) {
+      winnerAnnouncement.textContent = `🎉 Player 2 Wins with ${scores[1]} Points!`;
+    } else {
+      winnerAnnouncement.textContent = `🤝 It's a Tie! Both scored ${scores[0]} Points!`;
+    }
+    setTimeout(() => {
+      popupMessage.classList.add('show');
+      const popupInner = popupMessage.querySelector('div');
+      if (popupInner) {
+        popupInner.classList.remove('scale-0');
+        popupInner.classList.add('scale-100');
+      }
+    }, 10);
     return;
   }
   currentPlayer = 1;
   updatePlayerTurn();
   resetTurnTimer();
+  // If CPU's move triggers another CPU move (should not occur in default logic), delay can be applied here if needed.
 }
 function clearLastMoveHighlight() {
   document.querySelectorAll('.last-move').forEach(dot => {
@@ -493,12 +506,11 @@ resetButton.addEventListener('click', () => {
   createGrid();
   startTurnTimer();
 });
-// Add pvpSettings show/hide on mode switch
+// Remove pvpSettings show/hide on mode switch
 pvpMode.addEventListener('click', () => {
   mode = "pvp";
   pvpMode.classList.add('active');
   cpuMode.classList.remove('active');
-  pvpSettings.classList.remove('hidden');
   createGrid();
   startTurnTimer();
 });
@@ -506,7 +518,6 @@ cpuMode.addEventListener('click', () => {
   mode = "cpu";
   cpuMode.classList.add('active');
   pvpMode.classList.remove('active');
-  pvpSettings.classList.add('hidden');
   createGrid();
   startTurnTimer();
 });
@@ -553,12 +564,41 @@ cpuMode.addEventListener('click', () => {
 <script>
 // Popup "Play Again" button listener
 const popupButton = document.getElementById('popupButton');
+const popupMessage = document.getElementById('popupMessage');
 popupButton.addEventListener('click', () => {
-  document.getElementById('popupMessage').classList.add('hidden');
-  createGrid();
-  startTurnTimer();
+  // Fade out popup overlay and animate inner div out
+  popupMessage.classList.remove('show');
+  const popupInner = popupMessage.querySelector('div');
+  if (popupInner) {
+    popupInner.classList.remove('scale-100');
+    popupInner.classList.add('scale-0');
+  }
+  setTimeout(() => {
+    popupMessage.classList.add('hidden');
+    createGrid();
+    startTurnTimer();
+  }, 500);
 });
 </script>
 </body>
 </html>
-</html>
+    @media (max-width: 480px) {
+      .grid-board-container {
+        width: 95vw;
+        height: 95vw;
+      }
+      .dot {
+        width: 6vw;
+        height: 6vw;
+      }
+    }
+    @media (min-width: 1024px) {
+      .grid-board-container {
+        width: 60vh;
+        height: 60vh;
+      }
+      .dot {
+        width: 3vh;
+        height: 3vh;
+      }
+    }
