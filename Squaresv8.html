@@ -80,8 +80,6 @@
       height: min(92vw, 68vh);
       max-width: 720px;
       max-height: 720px;
-      min-width: 260px;
-      min-height: 260px;
       overflow: hidden;
       box-sizing: border-box;
     }
@@ -122,6 +120,7 @@
       .grid-board-container {
         width: min(94vw, 56vh);
         height: min(94vw, 56vh);
+        padding: 0.75rem;
       }
       .player-card {
         width: min(172px, 44vw);
@@ -242,10 +241,21 @@ const pvpMode = document.getElementById('pvpMode');
 const cpuMode = document.getElementById('cpuMode');
 const pvpSettings = document.getElementById('pvpSettings');
 const alternateStartCheckbox = document.getElementById('alternateStart');
+const boardContainer = document.querySelector('.grid-board-container');
 
 alternateStartCheckbox.addEventListener('change', () => {
   alternateStart = alternateStartCheckbox.checked;
 });
+
+function getResponsiveBoardSize() {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const boardTop = boardContainer.getBoundingClientRect().top;
+  const verticalRoom = viewportHeight - boardTop - 16;
+  const horizontalRoom = viewportWidth - 24;
+  const usable = Math.min(720, horizontalRoom, verticalRoom);
+  return Math.max(220, Math.floor(usable));
+}
 
 function createGrid() {
   gridContainer.innerHTML = '';
@@ -263,11 +273,17 @@ function createGrid() {
     currentPlayer = 1;
   }
 
-  const boardSize = gridContainer.clientWidth;
-  spacing = boardSize / (gridSize - 1);
+  const boardSize = getResponsiveBoardSize();
+  boardContainer.style.width = `${boardSize}px`;
+  boardContainer.style.height = `${boardSize}px`;
 
-  gridContainer.style.width = `${(gridSize - 1) * spacing}px`;
-  gridContainer.style.height = `${(gridSize - 1) * spacing}px`;
+  const boardStyles = window.getComputedStyle(boardContainer);
+  const horizontalPadding = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
+  const innerBoardSize = Math.max(160, boardSize - horizontalPadding);
+  spacing = innerBoardSize / (gridSize - 1);
+
+  gridContainer.style.width = `${innerBoardSize}px`;
+  gridContainer.style.height = `${innerBoardSize}px`;
 
   for (let y = 0; y < gridSize; y++) {
     for (let x = 0; x < gridSize; x++) {
