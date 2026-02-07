@@ -6,6 +6,8 @@
   <title>Square Game - CPU Mode</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <style>
     body { background-color: #2b2b2b; }
     .grid-board-container, .instructions-box { background-color: #1a1a1a; }
@@ -100,6 +102,9 @@
     .mode-button.cpu {
       background: linear-gradient(145deg, #8b0000, #ff0000);
     }
+    .mode-button.online {
+      background: linear-gradient(145deg, #065f46, #10b981);
+    }
     .mode-button.active {
       box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
       transform: scale(1.05);
@@ -146,6 +151,17 @@
   <div class="flex justify-center mode-buttons">
     <button id="pvpMode" class="mode-button active">Player vs Player</button>
     <button id="cpuMode" class="mode-button cpu">Player vs CPU</button>
+    <button id="onlineMode" class="mode-button online">Online</button>
+  </div>
+  <div id="onlineControls" class="hidden flex flex-col items-center text-white mt-2">
+    <div class="flex flex-wrap justify-center gap-2">
+      <button id="createRoomButton" class="mode-button online">Create Room</button>
+      <input id="roomCodeInput" class="text-black rounded px-3 py-2 w-36" type="text" maxlength="6" placeholder="Room Code" />
+      <button id="joinRoomButton" class="mode-button online">Join Room</button>
+      <button id="leaveRoomButton" class="mode-button">Leave Room</button>
+    </div>
+    <p id="onlineStatus" class="mt-2 text-sm text-gray-300">Online mode is off.</p>
+    <p id="onlineShareCode" class="mt-1 text-sm font-semibold text-emerald-300"></p>
   </div>
   <div id="difficultyButtons" class="hidden flex justify-center mt-2">
     <button id="difficultyEasy" data-value="easy" class="mode-button ml-4" style="background: linear-gradient(145deg, #007BFF, #00BFFF);">Easy</button>
@@ -208,18 +224,15 @@
   </div>
 </div>
 <script>
-
-
-// Full JavaScript logic with the correct click handler
 const gridSize = 8;
 let spacing = 80;
-const dotSize = 20;
 const lineThickness = 6;
+const totalDots = gridSize * gridSize;
 let currentPlayer = 1;
 let scores = [0, 0];
 let selectedDots = [];
 let lines = [];
-let totalDots = gridSize * gridSize;
+let lineSegments = [];
 let selectedDotCount = 0;
 let mode = "pvp";
 let turnStartTime = Date.now();
@@ -227,8 +240,23 @@ let timerInterval;
 let difficulty = "medium";
 let alternateStart = false;
 let lastStartingPlayer = 2;
+let onlineReady = false;
+let onlinePlayerNumber = null;
+
+// Set window.SQUARE_GAME_FIREBASE_CONFIG = { ... } before this script to enable online rooms.
+const FIREBASE_CONFIG = window.SQUARE_GAME_FIREBASE_CONFIG || null;
+const ONLINE_DB_PATH = "squareGameRooms";
+const localClientId = Math.random().toString(36).slice(2, 10);
+let db = null;
+const onlineSession = {
+  roomId: null,
+  unsubscribe: null,
+  isApplyingRemote: false,
+  lastStateHash: ""
+};
 
 const gridContainer = document.getElementById('gridContainer');
+const boardContainer = document.querySelector('.grid-board-container');
 const player1Score = document.getElementById('player1Score');
 const player2Score = document.getElementById('player2Score');
 const player1Card = document.getElementById('player1Card');
@@ -239,13 +267,70 @@ const player1Timer = document.getElementById('player1Timer');
 const player2Timer = document.getElementById('player2Timer');
 const pvpMode = document.getElementById('pvpMode');
 const cpuMode = document.getElementById('cpuMode');
+const onlineMode = document.getElementById('onlineMode');
 const pvpSettings = document.getElementById('pvpSettings');
 const alternateStartCheckbox = document.getElementById('alternateStart');
-const boardContainer = document.querySelector('.grid-board-container');
+const difficultyButtons = document.getElementById('difficultyButtons');
+const difficultyEasy = document.getElementById('difficultyEasy');
+const difficultyMedium = document.getElementById('difficultyMedium');
+const difficultyHard = document.getElementById('difficultyHard');
+const onlineControls = document.getElementById('onlineControls');
+const createRoomButton = document.getElementById('createRoomButton');
+const joinRoomButton = document.getElementById('joinRoomButton');
+const leaveRoomButton = document.getElementById('leaveRoomButton');
+const roomCodeInput = document.getElementById('roomCodeInput');
+const onlineStatus = document.getElementById('onlineStatus');
+const onlineShareCode = document.getElementById('onlineShareCode');
 
-alternateStartCheckbox.addEventListener('change', () => {
-  alternateStart = alternateStartCheckbox.checked;
-});
+if (alternateStartCheckbox) {
+  alternateStartCheckbox.addEventListener('change', () => {
+    alternateStart = alternateStartCheckbox.checked;
+  });
+}
+
+function setOnlineStatus(message) {
+  if (onlineStatus) onlineStatus.textContent = message;
+}
+
+function showEndPopup() {
+  const popupMessage = document.getElementById('popupMessage');
+  if (!popupMessage) return;
+  popupMessage.classList.remove('hidden');
+  setTimeout(() => {
+    popupMessage.classList.add('show');
+    const popupInner = popupMessage.querySelector('div');
+    if (popupInner) {
+      popupInner.classList.remove('scale-0');
+      popupInner.classList.add('scale-100');
+    }
+  }, 10);
+}
+
+function hideEndPopup() {
+  const popupMessage = document.getElementById('popupMessage');
+  if (!popupMessage) return;
+  popupMessage.classList.remove('show');
+  const popupInner = popupMessage.querySelector('div');
+  if (popupInner) {
+    popupInner.classList.remove('scale-100');
+    popupInner.classList.add('scale-0');
+  }
+  popupMessage.classList.add('hidden');
+}
+
+function initializeOnlineBackend() {
+  if (!FIREBASE_CONFIG || !window.firebase) return false;
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp(FIREBASE_CONFIG);
+    }
+    db = firebase.database();
+    return true;
+  } catch (error) {
+    console.error("Failed to initialize Firebase:", error);
+    return false;
+  }
+}
 
 function getResponsiveBoardSize() {
   const viewportWidth = window.innerWidth;
@@ -257,20 +342,24 @@ function getResponsiveBoardSize() {
   return Math.max(220, Math.floor(usable));
 }
 
-function createGrid() {
+function createGrid(options = {}) {
+  const preserveState = Boolean(options.preserveState);
   gridContainer.innerHTML = '';
-  selectedDots = [];
-  lines = [];
-  selectedDotCount = 0;
-  scores = [0, 0];
-  player1Score.textContent = "0";
-  player2Score.textContent = "0";
-  if (mode === "pvp" && alternateStart) {
-    // Alternate starting player between games
-    currentPlayer = (lastStartingPlayer === 1) ? 2 : 1;
-    lastStartingPlayer = currentPlayer;
-  } else {
-    currentPlayer = 1;
+
+  if (!preserveState) {
+    selectedDots = [];
+    lines = [];
+    lineSegments = [];
+    selectedDotCount = 0;
+    scores = [0, 0];
+    player1Score.textContent = "0";
+    player2Score.textContent = "0";
+    if (mode === "pvp" && alternateStart) {
+      currentPlayer = (lastStartingPlayer === 1) ? 2 : 1;
+      lastStartingPlayer = currentPlayer;
+    } else {
+      currentPlayer = 1;
+    }
   }
 
   const boardSize = getResponsiveBoardSize();
@@ -294,64 +383,106 @@ function createGrid() {
       dot.dataset.x = x;
       dot.dataset.y = y;
       dot.dataset.id = `${x}-${y}`;
-      dot.addEventListener('click', function () {
-        if (!this.classList.contains('player1') && !this.classList.contains('player2')) {
-          if (mode === "pvp" || (mode === "cpu" && currentPlayer === 1)) {
-            this.classList.add(`player${currentPlayer}`);
-            clearLastMoveHighlight();
-            this.classList.add('last-move');
-            setTimeout(() => {
-              this.classList.remove('last-move');
-            }, 2000);
-            selectedDotCount++;
-            selectedDots.push({ x: parseInt(this.dataset.x), y: parseInt(this.dataset.y), id: this.dataset.id, player: currentPlayer });
-            checkForSquares();
-            if (selectedDotCount === totalDots) {
-              // Show “Play Again” popup
-              const popupMessage = document.getElementById('popupMessage');
-              popupMessage.classList.remove('hidden');
-              setTimeout(() => {
-                popupMessage.classList.add('show');
-                // Animate popup inner div
-                const popupInner = popupMessage.querySelector('div');
-                if (popupInner) {
-                  popupInner.classList.remove('scale-0');
-                  popupInner.classList.add('scale-100');
-                }
-              }, 10);
-            } else {
-              currentPlayer = currentPlayer === 1 ? 2 : 1;
-              updatePlayerTurn();
-              resetTurnTimer();
-              if (mode === "cpu" && currentPlayer === 2) {
-                setTimeout(cpuMove, 500);
-              }
-            }
-          }
-        }
-      });
+      dot.addEventListener('click', () => handleDotClick(dot));
       gridContainer.appendChild(dot);
     }
   }
+
+  if (preserveState) {
+    renderPersistedState();
+  }
   updatePlayerTurn();
 }
+
+function renderPersistedState() {
+  const claimedMap = new Map(selectedDots.map(dot => [dot.id, dot.player]));
+  gridContainer.querySelectorAll('.dot').forEach(dotEl => {
+    const player = claimedMap.get(dotEl.dataset.id);
+    if (player) {
+      dotEl.classList.add(`player${player}`);
+    }
+  });
+  lineSegments.forEach(segment => {
+    drawLine(
+      { x: segment.x1, y: segment.y1 },
+      { x: segment.x2, y: segment.y2 },
+      segment.player,
+      false
+    );
+  });
+  player1Score.textContent = String(scores[0] || 0);
+  player2Score.textContent = String(scores[1] || 0);
+}
+
+function handleDotClick(dotEl) {
+  if (dotEl.classList.contains('player1') || dotEl.classList.contains('player2')) return;
+  if (mode === "cpu" && currentPlayer !== 1) return;
+  if (mode === "online") {
+    if (!onlineSession.roomId) {
+      setOnlineStatus("Create or join an online room first.");
+      return;
+    }
+    if (!onlinePlayerNumber) {
+      setOnlineStatus("You are not in this room as a player.");
+      return;
+    }
+    if (currentPlayer !== onlinePlayerNumber) return;
+  }
+
+  const actingPlayer = currentPlayer;
+  applyMove(dotEl, actingPlayer, true);
+
+  if (mode === "online" && onlineSession.roomId) {
+    void publishOnlineState();
+    return;
+  }
+
+  if (mode === "cpu" && currentPlayer === 2 && selectedDotCount < totalDots) {
+    const delay = difficulty === "easy" ? 1200 : difficulty === "medium" ? 800 : 500;
+    setTimeout(cpuMove, delay);
+  }
+}
+
+function applyMove(dotEl, player, highlightLastMove) {
+  dotEl.classList.add(`player${player}`);
+  if (highlightLastMove) {
+    clearLastMoveHighlight();
+    dotEl.classList.add('last-move');
+    setTimeout(() => {
+      dotEl.classList.remove('last-move');
+    }, 2000);
+  }
+
+  selectedDotCount++;
+  selectedDots.push({
+    x: parseInt(dotEl.dataset.x, 10),
+    y: parseInt(dotEl.dataset.y, 10),
+    id: dotEl.dataset.id,
+    player
+  });
+  checkForSquares(player);
+
+  if (selectedDotCount === totalDots) {
+    showEndPopup();
+    return;
+  }
+
+  currentPlayer = player === 1 ? 2 : 1;
+  updatePlayerTurn();
+  resetTurnTimer();
+}
+
 function wouldMakeSquare(x, y, player) {
-  // Build a list of existing dots for the given player
   const dots = selectedDots
     .filter(d => d.player === player)
     .map(d => ({ x: d.x, y: d.y, id: d.id }));
-  // Simulate adding the new dot at (x, y)
   dots.push({ x, y, id: `${x}-${y}` });
-  // Check all combinations of 4 dots to see if they form a square that includes (x, y)
   for (let i = 0; i < dots.length; i++) {
     for (let j = i + 1; j < dots.length; j++) {
       for (let k = j + 1; k < dots.length; k++) {
         for (let l = k + 1; l < dots.length; l++) {
           const quad = [dots[i], dots[j], dots[k], dots[l]];
-          if (
-            isSquare(quad) &&
-            quad.some(d => d.x === x && d.y === y) // ensure (x,y) is part of that square
-          ) {
+          if (isSquare(quad) && quad.some(d => d.x === x && d.y === y)) {
             return true;
           }
         }
@@ -362,35 +493,29 @@ function wouldMakeSquare(x, y, player) {
 }
 
 function cpuMove() {
+  if (mode !== "cpu") return;
   const availableDots = [...document.querySelectorAll('.dot:not(.player1):not(.player2)')];
   if (availableDots.length === 0) return;
-  
+
   let chosenDot;
   if (difficulty === "easy") {
-    // Easy: pick any available dot at random
     chosenDot = availableDots[Math.floor(Math.random() * availableDots.length)];
   } else if (difficulty === "medium") {
-    // Medium: look for a dot that blocks Player 1 from completing a square; otherwise random
     let blockDot = null;
     for (const dot of availableDots) {
-      const x = parseInt(dot.dataset.x);
-      const y = parseInt(dot.dataset.y);
+      const x = parseInt(dot.dataset.x, 10);
+      const y = parseInt(dot.dataset.y, 10);
       if (wouldMakeSquare(x, y, 1)) {
         blockDot = dot;
         break;
       }
     }
-    if (blockDot) {
-      chosenDot = blockDot;
-    } else {
-      chosenDot = availableDots[Math.floor(Math.random() * availableDots.length)];
-    }
-  } else if (difficulty === "hard") {
-    // Hard: first see if CPU (Player 2) can complete a square; if not, block Player 1; otherwise random
+    chosenDot = blockDot || availableDots[Math.floor(Math.random() * availableDots.length)];
+  } else {
     let winDot = null;
     for (const dot of availableDots) {
-      const x = parseInt(dot.dataset.x);
-      const y = parseInt(dot.dataset.y);
+      const x = parseInt(dot.dataset.x, 10);
+      const y = parseInt(dot.dataset.y, 10);
       if (wouldMakeSquare(x, y, 2)) {
         winDot = dot;
         break;
@@ -399,59 +524,28 @@ function cpuMove() {
     if (winDot) {
       chosenDot = winDot;
     } else {
-      // no immediate win, so block Player 1 if they can win next turn
       let blockDot = null;
       for (const dot of availableDots) {
-        const x = parseInt(dot.dataset.x);
-        const y = parseInt(dot.dataset.y);
+        const x = parseInt(dot.dataset.x, 10);
+        const y = parseInt(dot.dataset.y, 10);
         if (wouldMakeSquare(x, y, 1)) {
           blockDot = dot;
           break;
         }
       }
-      if (blockDot) {
-        chosenDot = blockDot;
-      } else {
-        chosenDot = availableDots[Math.floor(Math.random() * availableDots.length)];
-      }
+      chosenDot = blockDot || availableDots[Math.floor(Math.random() * availableDots.length)];
     }
   }
 
-  chosenDot.classList.add('player2');
-  clearLastMoveHighlight();
-  chosenDot.classList.add('last-move');
-  setTimeout(() => {
-    chosenDot.classList.remove('last-move');
-  }, 2000);
-  selectedDotCount++;
-  selectedDots.push({ x: parseInt(chosenDot.dataset.x), y: parseInt(chosenDot.dataset.y), id: chosenDot.dataset.id, player: 2 });
-  checkForSquares();
-  if (selectedDotCount === totalDots) {
-    // Show “Play Again” popup
-    const popupMessage = document.getElementById('popupMessage');
-    popupMessage.classList.remove('hidden');
-    setTimeout(() => {
-      popupMessage.classList.add('show');
-      // Animate popup inner div
-      const popupInner = popupMessage.querySelector('div');
-      if (popupInner) {
-        popupInner.classList.remove('scale-0');
-        popupInner.classList.add('scale-100');
-      }
-    }, 10);
-    return;
-  }
-  currentPlayer = 1;
-  updatePlayerTurn();
-  resetTurnTimer();
+  applyMove(chosenDot, 2, true);
 }
+
 function clearLastMoveHighlight() {
-  document.querySelectorAll('.last-move').forEach(dot => {
-    dot.classList.remove('last-move');
-  });
+  document.querySelectorAll('.last-move').forEach(dot => dot.classList.remove('last-move'));
 }
-function checkForSquares() {
-  const playerDots = selectedDots.filter(dot => dot.player === currentPlayer);
+
+function checkForSquares(player) {
+  const playerDots = selectedDots.filter(dot => dot.player === player);
   if (playerDots.length < 4) return;
 
   for (let i = 0; i < playerDots.length; i++) {
@@ -465,10 +559,10 @@ function checkForSquares() {
               lines.push(squareKey);
               const sideLength = Math.sqrt((dots[0].x - dots[1].x) ** 2 + (dots[0].y - dots[1].y) ** 2);
               const points = Math.round(sideLength * sideLength);
-              scores[currentPlayer - 1] += points;
-              player1Score.textContent = scores[0];
-              player2Score.textContent = scores[1];
-              drawSquare(dots);
+              scores[player - 1] += points;
+              player1Score.textContent = String(scores[0]);
+              player2Score.textContent = String(scores[1]);
+              drawSquare(dots, player);
             }
           }
         }
@@ -476,6 +570,7 @@ function checkForSquares() {
     }
   }
 }
+
 function isSquare(dots) {
   const [a, b, c, d] = dots;
   const dist = (p1, p2) => Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
@@ -490,14 +585,16 @@ function isSquare(dots) {
          dists[4] === dists[5] &&
          dists[4] === 2 * dists[0];
 }
-function drawSquare(dots) {
+
+function drawSquare(dots, player) {
   const sortedDots = sortDotsInOrder(dots);
   for (let i = 0; i < sortedDots.length; i++) {
     const dot1 = sortedDots[i];
     const dot2 = sortedDots[(i + 1) % sortedDots.length];
-    drawLine(dot1, dot2);
+    drawLine(dot1, dot2, player, true);
   }
 }
+
 function sortDotsInOrder(dots) {
   const centerX = dots.reduce((sum, dot) => sum + dot.x, 0) / dots.length;
   const centerY = dots.reduce((sum, dot) => sum + dot.y, 0) / dots.length;
@@ -507,7 +604,8 @@ function sortDotsInOrder(dots) {
     return angleA - angleB;
   });
 }
-function drawLine(dot1, dot2) {
+
+function drawLine(dot1, dot2, player = currentPlayer, recordSegment = true) {
   const x1 = dot1.x * spacing;
   const y1 = dot1.y * spacing;
   const x2 = dot2.x * spacing;
@@ -515,24 +613,35 @@ function drawLine(dot1, dot2) {
   const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
   const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
   const line = document.createElement('div');
-  line.className = `line player${currentPlayer}`;
+  line.className = `line player${player}`;
   line.style.width = `${length}px`;
   line.style.height = `${lineThickness}px`;
   line.style.left = `${x1}px`;
   line.style.top = `${y1}px`;
   line.style.transform = `rotate(${angle}deg)`;
   gridContainer.appendChild(line);
+
+  if (recordSegment) {
+    lineSegments.push({
+      x1: dot1.x, y1: dot1.y,
+      x2: dot2.x, y2: dot2.y,
+      player
+    });
+  }
 }
+
 function startTurnTimer() {
   turnStartTime = Date.now();
   updateTimerDisplay();
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(updateTimerDisplay, 1000);
 }
+
 function resetTurnTimer() {
   turnStartTime = Date.now();
   updateTimerDisplay();
 }
+
 function updateTimerDisplay() {
   const elapsedTime = Date.now() - turnStartTime;
   const seconds = Math.floor((elapsedTime / 1000) % 60);
@@ -548,21 +657,292 @@ function updateTimerDisplay() {
     player2Timer.classList.remove('hidden');
   }
 }
+
 function updatePlayerTurn() {
   player1Card.classList.toggle('active', currentPlayer === 1);
   player2Card.classList.toggle('active', currentPlayer === 2);
-  gameStatus.textContent = `Player ${currentPlayer}'s Turn`;
+  if (mode === "online" && onlineSession.roomId) {
+    gameStatus.textContent = `Room ${onlineSession.roomId} • Player ${currentPlayer}'s Turn`;
+  } else if (mode === "online") {
+    gameStatus.textContent = "Create or Join an Online Room";
+  } else {
+    gameStatus.textContent = `Player ${currentPlayer}'s Turn`;
+  }
 }
-resetButton.addEventListener('click', () => {
+
+function getStateHash(state) {
+  return JSON.stringify({
+    selectedDots: state.selectedDots,
+    scores: state.scores,
+    currentPlayer: state.currentPlayer,
+    selectedDotCount: state.selectedDotCount,
+    lines: state.lines
+  });
+}
+
+function serializeGameState() {
+  return {
+    selectedDots: selectedDots.map(dot => ({ ...dot })),
+    lines: [...lines],
+    lineSegments: lineSegments.map(segment => ({ ...segment })),
+    scores: [...scores],
+    currentPlayer,
+    selectedDotCount
+  };
+}
+
+function applyOnlineState(state) {
+  if (!state) return;
+  const nextHash = getStateHash(state);
+  if (nextHash === onlineSession.lastStateHash) return;
+
+  onlineSession.isApplyingRemote = true;
+  selectedDots = Array.isArray(state.selectedDots) ? state.selectedDots.map(dot => ({ ...dot })) : [];
+  lines = Array.isArray(state.lines) ? [...state.lines] : [];
+  lineSegments = Array.isArray(state.lineSegments) ? state.lineSegments.map(segment => ({ ...segment })) : [];
+  scores = Array.isArray(state.scores) ? [...state.scores] : [0, 0];
+  currentPlayer = state.currentPlayer === 2 ? 2 : 1;
+  selectedDotCount = Number.isFinite(state.selectedDotCount) ? state.selectedDotCount : selectedDots.length;
+
+  createGrid({ preserveState: true });
+  if (selectedDotCount === totalDots) {
+    showEndPopup();
+  } else {
+    hideEndPopup();
+  }
+  onlineSession.lastStateHash = nextHash;
+  onlineSession.isApplyingRemote = false;
+}
+
+async function publishOnlineState() {
+  if (!onlineReady || !onlineSession.roomId || onlineSession.isApplyingRemote) return;
+  const roomRef = db.ref(`${ONLINE_DB_PATH}/${onlineSession.roomId}`);
+  const state = serializeGameState();
+  onlineSession.lastStateHash = getStateHash(state);
+  try {
+    await roomRef.update({
+      state,
+      updatedAt: Date.now()
+    });
+  } catch (error) {
+    setOnlineStatus("Failed to sync move. Check connection.");
+    console.error(error);
+  }
+}
+
+function generateRoomCode() {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+function subscribeToRoom(roomId) {
+  if (!onlineReady) return;
+  const roomRef = db.ref(`${ONLINE_DB_PATH}/${roomId}`);
+  if (onlineSession.unsubscribe && onlineSession.roomId) {
+    const previousRef = db.ref(`${ONLINE_DB_PATH}/${onlineSession.roomId}`);
+    previousRef.off('value', onlineSession.unsubscribe);
+  }
+
+  const handler = snapshot => {
+    if (!snapshot.exists()) {
+      setOnlineStatus("Room closed.");
+      onlineSession.roomId = null;
+      onlinePlayerNumber = null;
+      onlineShareCode.textContent = "";
+      updatePlayerTurn();
+      return;
+    }
+
+    const room = snapshot.val();
+    if (room.hostId === localClientId) {
+      onlinePlayerNumber = 1;
+    } else if (room.guestId === localClientId) {
+      onlinePlayerNumber = 2;
+    } else {
+      onlinePlayerNumber = null;
+    }
+
+    if (room.state) {
+      applyOnlineState(room.state);
+    }
+
+    const waitingText = room.guestId ? "" : " Waiting for Player 2.";
+    const roleText = onlinePlayerNumber ? `You are Player ${onlinePlayerNumber}.` : "Spectating.";
+    const turnText = room.state ? ` Player ${room.state.currentPlayer}'s turn.` : "";
+    setOnlineStatus(`${roleText}${waitingText}${turnText}`);
+  };
+
+  roomRef.on('value', handler);
+  onlineSession.unsubscribe = handler;
+  onlineSession.roomId = roomId;
+}
+
+async function createOnlineRoom() {
+  if (!onlineReady) {
+    setOnlineStatus("Online mode is unavailable. Add Firebase config.");
+    return;
+  }
+
+  await leaveOnlineRoom(false);
+  hideEndPopup();
   createGrid();
   startTurnTimer();
-});
-const difficultyButtons = document.getElementById('difficultyButtons');
-const difficultyEasy = document.getElementById('difficultyEasy');
-const difficultyMedium = document.getElementById('difficultyMedium');
-const difficultyHard = document.getElementById('difficultyHard');
 
-// Clicking a difficulty button sets 'difficulty' and updates active styling
+  let roomId = null;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const candidate = generateRoomCode();
+    const roomRef = db.ref(`${ONLINE_DB_PATH}/${candidate}`);
+    const initialState = serializeGameState();
+    const result = await roomRef.transaction(current => {
+      if (current) return;
+      return {
+        hostId: localClientId,
+        guestId: null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        state: initialState
+      };
+    });
+    if (result.committed) {
+      roomId = candidate;
+      break;
+    }
+  }
+
+  if (!roomId) {
+    setOnlineStatus("Could not create a room. Try again.");
+    return;
+  }
+
+  onlinePlayerNumber = 1;
+  subscribeToRoom(roomId);
+  onlineShareCode.textContent = `Share code: ${roomId}`;
+  setOnlineStatus("Room created. Waiting for Player 2.");
+}
+
+async function joinOnlineRoom() {
+  if (!onlineReady) {
+    setOnlineStatus("Online mode is unavailable. Add Firebase config.");
+    return;
+  }
+
+  const roomId = (roomCodeInput.value || "").trim().toUpperCase();
+  if (!roomId) {
+    setOnlineStatus("Enter a room code.");
+    return;
+  }
+
+  await leaveOnlineRoom(false);
+  const roomRef = db.ref(`${ONLINE_DB_PATH}/${roomId}`);
+  const snapshot = await roomRef.once('value');
+  if (!snapshot.exists()) {
+    setOnlineStatus("Room not found.");
+    return;
+  }
+
+  const room = snapshot.val();
+  if (room.hostId !== localClientId && room.guestId && room.guestId !== localClientId) {
+    setOnlineStatus("Room is full.");
+    return;
+  }
+
+  if (room.hostId !== localClientId) {
+    await roomRef.update({
+      guestId: localClientId,
+      updatedAt: Date.now()
+    });
+    onlinePlayerNumber = 2;
+  } else {
+    onlinePlayerNumber = 1;
+  }
+
+  subscribeToRoom(roomId);
+  onlineShareCode.textContent = `Joined room: ${roomId}`;
+  if (room.state) applyOnlineState(room.state);
+  setOnlineStatus(`Connected to room ${roomId}.`);
+}
+
+async function leaveOnlineRoom(resetBoard = true) {
+  if (!onlineReady || !onlineSession.roomId) return;
+  const roomId = onlineSession.roomId;
+  const roomRef = db.ref(`${ONLINE_DB_PATH}/${roomId}`);
+
+  if (onlineSession.unsubscribe) {
+    roomRef.off('value', onlineSession.unsubscribe);
+    onlineSession.unsubscribe = null;
+  }
+
+  try {
+    const snapshot = await roomRef.once('value');
+    if (snapshot.exists()) {
+      const room = snapshot.val();
+      if (room.hostId === localClientId) {
+        await roomRef.remove();
+      } else if (room.guestId === localClientId) {
+        await roomRef.update({
+          guestId: null,
+          updatedAt: Date.now()
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Leave room failed:", error);
+  }
+
+  onlineSession.roomId = null;
+  onlinePlayerNumber = null;
+  onlineShareCode.textContent = "";
+  onlineSession.lastStateHash = "";
+  setOnlineStatus("Online mode is off.");
+  updatePlayerTurn();
+
+  if (resetBoard) {
+    hideEndPopup();
+    createGrid();
+    startTurnTimer();
+  }
+}
+
+function setMode(nextMode, options = {}) {
+  if (nextMode === "online" && !onlineReady) {
+    setOnlineStatus("Online mode unavailable. Add Firebase config first.");
+    return;
+  }
+
+  const previousMode = mode;
+  mode = nextMode;
+  const isCpu = mode === "cpu";
+  const isOnline = mode === "online";
+
+  pvpMode.classList.toggle('active', mode === "pvp");
+  cpuMode.classList.toggle('active', isCpu);
+  onlineMode.classList.toggle('active', isOnline);
+  pvpSettings.classList.toggle('hidden', isCpu || isOnline);
+  difficultyButtons.classList.toggle('hidden', !isCpu);
+  onlineControls.classList.toggle('hidden', !isOnline);
+
+  if (previousMode === "online" && mode !== "online" && onlineSession.roomId) {
+    void leaveOnlineRoom(false);
+  }
+
+  if (!options.skipReset) {
+    hideEndPopup();
+    createGrid();
+    startTurnTimer();
+    if (isOnline && onlineSession.roomId) {
+      void publishOnlineState();
+    }
+  } else {
+    updatePlayerTurn();
+  }
+}
+
+onlineReady = initializeOnlineBackend();
+if (!onlineReady) {
+  onlineMode.disabled = true;
+  onlineMode.classList.add('opacity-50', 'cursor-not-allowed');
+  setOnlineStatus("Online unavailable. Set window.SQUARE_GAME_FIREBASE_CONFIG.");
+}
+
 [difficultyEasy, difficultyMedium, difficultyHard].forEach(btn => {
   btn.addEventListener('click', () => {
     difficulty = btn.dataset.value;
@@ -571,40 +951,52 @@ const difficultyHard = document.getElementById('difficultyHard');
   });
 });
 
-function setMode(nextMode) {
-  mode = nextMode;
-  const isCpu = mode === "cpu";
-  pvpMode.classList.toggle('active', !isCpu);
-  cpuMode.classList.toggle('active', isCpu);
-  pvpSettings.classList.toggle('hidden', isCpu);
-  difficultyButtons.classList.toggle('hidden', !isCpu);
+resetButton.addEventListener('click', () => {
+  hideEndPopup();
   createGrid();
   startTurnTimer();
-}
+  if (mode === "online" && onlineSession.roomId) {
+    void publishOnlineState();
+  }
+});
 
 pvpMode.addEventListener('click', () => setMode("pvp"));
 cpuMode.addEventListener('click', () => setMode("cpu"));
+onlineMode.addEventListener('click', () => setMode("online"));
+createRoomButton.addEventListener('click', () => { void createOnlineRoom(); });
+joinRoomButton.addEventListener('click', () => { void joinOnlineRoom(); });
+leaveRoomButton.addEventListener('click', () => { void leaveOnlineRoom(true); });
+roomCodeInput.addEventListener('input', () => {
+  roomCodeInput.value = roomCodeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+});
+roomCodeInput.addEventListener('keydown', event => {
+  if (event.key === 'Enter') {
+    void joinOnlineRoom();
+  }
+});
+
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    if (gridContainer.childElementCount > 0) {
+      createGrid({ preserveState: true });
+    }
+  }, 120);
+});
 
 setMode("pvp");
-
 </script>
 <script>
 // Popup "Play Again" button listener
 const popupButton = document.getElementById('popupButton');
-const popupMessage = document.getElementById('popupMessage');
 popupButton.addEventListener('click', () => {
-  // Fade out popup overlay and animate inner div out
-  popupMessage.classList.remove('show');
-  const popupInner = popupMessage.querySelector('div');
-  if (popupInner) {
-    popupInner.classList.remove('scale-100');
-    popupInner.classList.add('scale-0');
+  hideEndPopup();
+  createGrid();
+  startTurnTimer();
+  if (mode === "online") {
+    void publishOnlineState();
   }
-  setTimeout(() => {
-    popupMessage.classList.add('hidden');
-    createGrid();
-    startTurnTimer();
-  }, 500);
 });
 </script>
 </body>
