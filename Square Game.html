@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dot Grid Game</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+
+        body {
+
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+            background-color: #2a2a2a; /* Dark grey background */
+
+            min-height: 100vh;
+
+        }
+
+        .dot {
+
+            width: 20px;
+
+            height: 20px;
+
+            border-radius: 50%;
+
+            background-color: #f3f4f6;
+
+            cursor: pointer;
+
+            transition: transform 0.2s, background-color 0.3s;
+
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+            position: absolute;
+
+            transform: translate(-50%, -50%);
+
+        }
+
+        .dot:hover {
+
+            transform: translate(-50%, -50%) scale(1.2);
+
+        }
+
+        .dot.player1 {
+
+            background-color: #ff1a1a; /* Neon red */
+
+            box-shadow: 0 0 10px #ff1a1a, 0 0 20px #ff1a1a;
+
+        }
+
+        .dot.player2 {
+
+            background-color: #1a75ff; /* Neon blue */
+
+            box-shadow: 0 0 10px #1a75ff, 0 0 20px #1a75ff;
+
+        }
+
+        .dot.used {
+
+            opacity: 0.7;
+
+        }
+
+        .square-line {
+
+            position: absolute;
+
+            z-index: -1;
+
+            transition: all 0.3s ease;
+
+        }
+
+        .square-line.player1 {
+
+            background-color: rgba(255, 26, 26, 0.8); /* Neon red */
+
+            box-shadow: 0 0 5px #ff1a1a, 0 0 10px #ff1a1a;
+
+        }
+
+        .square-line.player2 {
+
+            background-color: rgba(26, 117, 255, 0.8); /* Neon blue */
+
+            box-shadow: 0 0 5px #1a75ff, 0 0 10px #1a75ff;
+
+        }
+
+        .game-container {
+
+            background-color: rgba(255, 255, 255, 0.05);
+
+            backdrop-filter: blur(10px);
+
+            border-radius: 16px;
+
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+
+        }
+
+        .player-card {
+
+            border-radius: 12px;
+
+            transition: all 0.3s ease;
+
+        }
+
+        .player-card.active {
+
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+
+            transform: translateY(-5px);
+
+        }
+
+        .grid-container {
+
+            position: relative;
+
+            margin: 0 auto;
+
+            background-color: rgba(255, 255, 255, 0.05);
+
+            border-radius: 8px;
+
+        }
+
+        .game-board-container {
+
+            overflow: auto;
+
+            max-width: 100%;
+
+            max-height: 70vh;
+
+            padding: 20px;
+
+        }
+
+        .mode-btn {
+
+            transition: all 0.3s ease;
+
+        }
+
+        .mode-btn.active {
+
+            transform: scale(1.05);
+
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+
+        }
+
+        .difficulty-btn {
+
+            transition: all 0.3s ease;
+
+        }
+
+        .difficulty-btn.active {
+
+            transform: scale(1.05);
+
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+
+        }
+
+        .thinking {
+
+            position: absolute;
+
+            top: 10px;
+
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            background-color: rgba(0, 0, 0, 0.7);
+
+            color: white;
+
+            padding: 8px 16px;
+
+            border-radius: 20px;
+
+            z-index: 100;
+
+            display: none;
+
+        }
+
+        .thinking.visible {
+
+            display: block;
+
+            animation: pulse 1.5s infinite;
+
+        }
+
+        @keyframes pulse {
+
+            0% { opacity: 0.7; }
+
+            50% { opacity: 1; }
+
+            100% { opacity: 0.7; }
+
+        }
+
+    </style>
+
+</head>
+
+<body class="p-4">
+
+    <div class="max-w-6xl mx-auto my-8 game-container p-6">
+
+        <h1 class="text-4xl font-bold text-center text-white mb-6">Dot Grid Game</h1>
+
+       
+
+        <!-- Game Mode Selection -->
+
+        <div id="modeSelection" class="mb-8">
+
+            <h2 class="text-2xl font-bold text-center text-white mb-4">Select Game Mode</h2>
+
+            <div class="flex justify-center gap-4">
+
+                <button id="twoPlayerMode" class="mode-btn bg-gradient-to-br from-purple-600 to-purple-800 p-4 text-white rounded-lg w-48 text-center active">
+
+                    <div class="text-xl font-bold">Two Players</div>
+
+                    <div class="mt-2 text-sm">Play against a friend</div>
+
+                </button>
+
+                <button id="computerMode" class="mode-btn bg-gradient-to-br from-green-600 to-green-800 p-4 text-white rounded-lg w-48 text-center">
+
+                    <div class="text-xl font-bold">Computer</div>
+
+                    <div class="mt-2 text-sm">Play against AI</div>
+
+                </button>
+
+            </div>
+
+           
+
+            <!-- Difficulty Selection (hidden by default) -->
+
+            <div id="difficultySelection" class="mt-4 hidden">
+
+                <h3 class="text-xl font-bold text-center text-white mb-3">Select Difficulty</h3>
+
+                <div class="flex justify-center gap-3">
+
+                    <button id="easyMode" class="difficulty-btn bg-gradient-to-br from-green-500 to-green-700 p-3 text-white rounded-lg w-32 text-center active">
+
+                        <div class="font-bold">Easy</div>
+
+                    </button>
+
+                    <button id="mediumMode" class="difficulty-btn bg-gradient-to-br from-yellow-500 to-yellow-700 p-3 text-white rounded-lg w-32 text-center">
+
+                        <div class="font-bold">Medium</div>
+
+                    </button>
+
+                    <button id="hardMode" class="difficulty-btn bg-gradient-to-br from-red-500 to-red-700 p-3 text-white rounded-lg w-32 text-center">
+
+                        <div class="font-bold">Hard</div>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+           
+
+            <div class="flex justify-center mt-6">
+
+                <button id="startGameBtn" class="bg-white text-gray-800 px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition">
+
+                    Start Game
+
+                </button>
+
+            </div>
+
+        </div>
+
+       
+
+        <!-- Game Board (hidden by default) -->
+
+        <div id="gameBoard" class="hidden">
+
+            <div class="flex justify-between mb-8">
+
+                <div id="player1Card" class="player-card bg-gradient-to-br from-red-600 to-red-800 p-4 text-white w-48 text-center">
+
+                    <h2 class="text-xl font-bold">Player 1</h2>
+
+                    <p class="text-3xl font-bold mt-2" id="player1Score">0.0</p>
+
+                    <div class="mt-2 text-sm">Red</div>
+
+                </div>
+
+               
+
+                <div class="bg-white bg-opacity-10 rounded-lg p-3 text-white text-center">
+
+                    <p id="gameStatus" class="font-medium">Player 1's Turn</p>
+
+                    <div id="thinking" class="thinking">Computer is thinking...</div>
+
+                    <button id="resetButton" class="mt-2 bg-white text-gray-800 px-4 py-1 rounded-full font-medium hover:bg-gray-100 transition">Reset Game</button>
+
+                    <button id="newGameButton" class="mt-2 bg-white text-gray-800 px-4 py-1 rounded-full font-medium hover:bg-gray-100 transition">New Game</button>
+
+                </div>
+
+               
+
+                <div id="player2Card" class="player-card bg-gradient-to-br from-blue-600 to-blue-800 p-4 text-white w-48 text-center">
+
+                    <h2 class="text-xl font-bold" id="player2Name">Player 2</h2>
+
+                    <p class="text-3xl font-bold mt-2" id="player2Score">0.0</p>
+
+                    <div class="mt-2 text-sm">Blue</div>
+
+                </div>
+
+            </div>
+
+           
+
+            <div class="flex justify-center mb-6 relative">
+
+                <div class="bg-black bg-opacity-20 rounded-lg game-board-container">
+
+                    <div id="gridContainer" class="grid-container">
+
+                        <!-- Dots and lines will be generated here -->
+
+                    </div>
+
+                </div>
+
+            </div>
+
+           
+
+            <div class="text-white text-center bg-black bg-opacity-20 p-4 rounded-lg">
+
+                <h3 class="font-bold mb-2">How to Play</h3>
+
+                <p>Players take turns selecting dots. When a player's selections form a square of any size, they earn points based on the square size.</p>
+
+                <p class="mt-2"><span class="font-bold">Scoring:</span> 1×1 square = 1 point, 2×2 square = 4 points, 3×3 square = 9 points, etc.</p>
+
+                <p class="mt-2"><span class="font-bold">Rules:</span> Once a dot is part of a square, it cannot be used to form another square. The game ends when no more squares can be formed.</p>
+
+            </div>
+
+        </div>
+
+       
+
+        <!-- Game Over Screen (hidden by default) -->
+
+        <div id="gameOverScreen" class="hidden">
+
+            <div class="bg-black bg-opacity-30 p-8 rounded-xl text-center">
+
+                <h2 class="text-3xl font-bold text-white mb-4">Game Over!</h2>
+
+                <p id="winnerText" class="text-2xl text-white mb-6">Player 1 wins with a score of 10.0!</p>
+
+                <div class="flex justify-center gap-4">
+
+                    <button id="playAgainBtn" class="bg-white text-gray-800 px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition">
+
+                        Play Again
+
+                    </button>
+
+                    <button id="newGameBtn" class="bg-white text-gray-800 px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition">
+
+                        New Game
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+ 
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // DOM Elements
+
+            const modeSelection = document.getElementById('modeSelection');
+
+            const gameBoard = document.getElementById('gameBoard');
+
+            const gameOverScreen = document.getElementById('gameOverScreen');
+
+            const difficultySelection = document.getElementById('difficultySelection');
+
+            const twoPlayerModeBtn = document.getElementById('twoPlayerMode');
+
+            const computerModeBtn = document.getElementById('computerMode');
+
+            const easyModeBtn = document.getElementById('easyMode');
+
+            const mediumModeBtn = document.getElementById('mediumMode');
+
+            const hardModeBtn = document.getElementById('hardMode');
+
+            const startGameBtn = document.getElementById('startGameBtn');
+
+            const resetButton = document.getElementById('resetButton');
+
+            const newGameButton = document.getElementById('newGameButton');
+
+            const playAgainBtn = document.getElementById('playAgainBtn');
+
+            const newGameBtn = document.getElementById('newGameBtn');
+
+            const gridContainer = document.getElementById('gridContainer');
+
+            const player1Score = document.getElementById('player1Score');
+
+            const player2Score = document.getElementById('player2Score');
+
+            const player1Card = document.getElementById('player1Card');
+
+            const player2Card = document.getElementById('player2Card');
+
+            const player2Name = document.getElementById('player2Name');
+
+            const gameStatus = document.getElementById('gameStatus');
+
+            const winnerText = document.getElementById('winnerText');
+
+            const thinkingIndicator = document.getElementById('thinking');
+
+           
+
+            // Game settings
+
+            const gridSize = 10;
+
+            const spacing = 48.75;
+
+            const dotSize = 20;
+
+            const lineThickness = dotSize / 3;
+
+           
+
+            // Game state
+
+            let gameMode = 'twoPlayer'; // 'twoPlayer' or 'computer'
+
+            let difficulty = 'easy'; // 'easy', 'medium', or 'hard'
+
+            let currentPlayer = 1;
+
+            let scores = [0.0, 0.0];
+
+            let selectedDots = [];
+
+            let squares = [];
+
+            let usedDots = new Set();
+
+            let gameActive = true;
+
+            let availableDots = [];
+
+            let computerThinking = false;
+
+           
+
+            // Event listeners for mode selection
+
+            twoPlayerModeBtn.addEventListener('click', function() {
+
+                setGameMode('twoPlayer');
+
+            });
+
+           
+
+            computerModeBtn.addEventListener('click', function() {
+
+                setGameMode('computer');
+
+            });
+
+           
+
+            // Event listeners for difficulty selection
+
+            easyModeBtn.addEventListener('click', function() {
+
+                setDifficulty('easy');
+
+            });
+
+           
+
+            mediumModeBtn.addEventListener('click', function() {
+
+                setDifficulty('medium');
+
+            });
+
+           
+
+            hardModeBtn.addEventListener('click', function() {
+
+                setDifficulty('hard');
+
+            });
+
+           
+
+            // Start game button
+
+            startGameBtn.addEventListener('click', function() {
+
+                modeSelection.classList.add('hidden');
+
+                gameBoard.classList.remove('hidden');
+
+                initializeGame();
+
+            });
+
+           
+
+            // Reset and new game buttons
+
+            resetButton.addEventListener('click', resetGame);
+
+            newGameButton.addEventListener('click', showModeSelection);
+
+            playAgainBtn.addEventListener('click', function() {
+
+                gameOverScreen.classList.add('hidden');
+
+                gameBoard.classList.remove('hidden');
+
+                initializeGame();
+
+            });
+
+            newGameBtn.addEventListener('click', showModeSelection);
+
+           
+
+            function setGameMode(mode) {
+
+                gameMode = mode;
+
+                twoPlayerModeBtn.classList.toggle('active', mode === 'twoPlayer');
+
+                computerModeBtn.classList.toggle('active', mode === 'computer');
+
+                difficultySelection.classList.toggle('hidden', mode === 'twoPlayer');
+
+            }
+
+           
+
+            function setDifficulty(level) {
+
+                difficulty = level;
+
+                easyModeBtn.classList.toggle('active', level === 'easy');
+
+                mediumModeBtn.classList.toggle('active', level === 'medium');
+
+                hardModeBtn.classList.toggle('active', level === 'hard');
+
+            }
+
+           
+
+            function showModeSelection() {
+
+                gameBoard.classList.add('hidden');
+
+                gameOverScreen.classList.add('hidden');
+
+                modeSelection.classList.remove('hidden');
+
+            }
+
+           
+
+            function initializeGame() {
+
+                currentPlayer = 1;
+
+                scores = [0.0, 0.0];
+
+                player1Score.textContent = "0.0";
+
+                player2Score.textContent = "0.0";
+
+                gameActive = true;
+
+               
+
+                // Update player 2 name based on game mode
+
+                if (gameMode === 'computer') {
+
+                    player2Name.textContent = "Computer";
+
+                } else {
+
+                    player2Name.textContent = "Player 2";
+
+                }
+
+               
+
+                createGrid();
+
+                updatePlayerTurn();
+
+            }
+
+           
+
+            function createGrid() {
+
+                gridContainer.innerHTML = '';
+
+                selectedDots = [];
+
+                squares = [];
+
+                usedDots = new Set();
+
+                availableDots = [];
+
+               
+
+                // Set grid container size
+
+                const gridWidth = (gridSize - 1) * spacing;
+
+                const gridHeight = (gridSize - 1) * spacing;
+
+                gridContainer.style.width = `${gridWidth}px`;
+
+                gridContainer.style.height = `${gridHeight}px`;
+
+               
+
+                // Create dots
+
+                for (let y = 0; y < gridSize; y++) {
+
+                    for (let x = 0; x < gridSize; x++) {
+
+                        const dot = document.createElement('div');
+
+                        dot.className = 'dot';
+
+                        dot.style.left = `${x * spacing}px`;
+
+                        dot.style.top = `${y * spacing}px`;
+
+                        dot.dataset.x = x;
+
+                        dot.dataset.y = y;
+
+                        dot.dataset.id = `${x}-${y}`;
+
+                       
+
+                        dot.addEventListener('click', function() {
+
+                            if (!gameActive || computerThinking) return;
+
+                           
+
+                            if (!this.classList.contains('player1') && !this.classList.contains('player2')) {
+
+                                handleDotSelection(this);
+
+                            }
+
+                        });
+
+                       
+
+                        gridContainer.appendChild(dot);
+
+                        availableDots.push({
+
+                            x: x,
+
+                            y: y,
+
+                            id: `${x}-${y}`,
+
+                            element: dot
+
+                        });
+
+                    }
+
+                }
+
+            }
+
+           
+
+            function handleDotSelection(dotElement) {
+
+                dotElement.classList.add(`player${currentPlayer}`);
+
+                const dotInfo = {
+
+                    x: parseInt(dotElement.dataset.x),
+
+                    y: parseInt(dotElement.dataset.y),
+
+                    id: dotElement.dataset.id,
+
+                    player: currentPlayer,
+
+                    element: dotElement
+
+                };
+
+                selectedDots.push(dotInfo);
+
+               
+
+                // Remove from available dots
+
+                availableDots = availableDots.filter(dot => dot.id !== dotInfo.id);
+
+               
+
+                // Check for squares with the new dot
+
+                const squaresFormed = checkForSquares(dotInfo);
+
+               
+
+                // Update score if squares were formed
+
+                if (squaresFormed > 0) {
+
+                    scores[currentPlayer - 1] += squaresFormed;
+
+                    // Round to 1 decimal place
+
+                    scores[currentPlayer - 1] = Math.round(scores[currentPlayer - 1] * 10) / 10;
+
+                    const scoreElement = currentPlayer === 1 ? player1Score : player2Score;
+
+                    scoreElement.textContent = scores[currentPlayer - 1].toFixed(1);
+
+                    gameStatus.textContent = `${currentPlayer === 1 ? 'Player 1' : (gameMode === 'computer' ? 'Computer' : 'Player 2')} formed ${squaresFormed.toFixed(1)} points!`;
+
+                }
+
+               
+
+                // Check if game is over
+
+                if (isGameOver()) {
+
+                    endGame();
+
+                    return;
+
+                }
+
+               
+
+                // Switch player
+
+                currentPlayer = currentPlayer === 1 ? 2 : 1;
+
+                updatePlayerTurn();
+
+               
+
+                // If it's computer's turn
+
+                if (gameActive && gameMode === 'computer' && currentPlayer === 2) {
+
+                    computerTurn();
+
+                }
+
+            }
+
+           
+
+            function computerTurn() {
+
+                computerThinking = true;
+
+                thinkingIndicator.classList.add('visible');
+
+               
+
+                // Add a delay to simulate thinking
+
+                setTimeout(() => {
+
+                    const dotElement = selectDotForComputer();
+
+                    if (dotElement) {
+
+                        handleDotSelection(dotElement);
+
+                    }
+
+                    computerThinking = false;
+
+                    thinkingIndicator.classList.remove('visible');
+
+                }, 1000);
+
+            }
+
+           
+
+            function selectDotForComputer() {
+
+                if (availableDots.length === 0) return null;
+
+               
+
+                switch (difficulty) {
+
+                    case 'easy':
+
+                        // Random selection
+
+                        return getRandomDot();
+
+                    case 'medium':
+
+                        // 50% chance of making a smart move, 50% random
+
+                        if (Math.random() < 0.5) {
+
+                            const smartDot = findPotentialSquareDot();
+
+                            if (smartDot) return smartDot;
+
+                        }
+
+                        return getRandomDot();
+
+                    case 'hard':
+
+                        // Try to find a dot that forms a square
+
+                        const smartDot = findPotentialSquareDot();
+
+                        if (smartDot) return smartDot;
+
+                       
+
+                        // If no square-forming dot found, try to block player
+
+                        const blockingDot = findBlockingDot();
+
+                        if (blockingDot) return blockingDot;
+
+                       
+
+                        // Otherwise, choose a strategic dot
+
+                        return findStrategicDot();
+
+                }
+
+            }
+
+           
+
+            function getRandomDot() {
+
+                const randomIndex = Math.floor(Math.random() * availableDots.length);
+
+                return availableDots[randomIndex].element;
+
+            }
+
+           
+
+            function findPotentialSquareDot() {
+
+                // Try each available dot to see if it forms a square
+
+                for (const dot of availableDots) {
+
+                    // Temporarily add this dot to selected dots
+
+                    const tempDot = {
+
+                        x: dot.x,
+
+                        y: dot.y,
+
+                        id: dot.id,
+
+                        player: 2,
+
+                        element: dot.element
+
+                    };
+
+                   
+
+                    // Check if this would form a square
+
+                    const playerDots = selectedDots.filter(d => d.player === 2 && !usedDots.has(d.id));
+
+                    playerDots.push(tempDot);
+
+                   
+
+                    if (playerDots.length >= 4) {
+
+                        // Check all combinations of 4 dots
+
+                        for (let i = 0; i < playerDots.length; i++) {
+
+                            for (let j = i + 1; j < playerDots.length; j++) {
+
+                                for (let k = j + 1; k < playerDots.length; k++) {
+
+                                    for (let l = k + 1; l < playerDots.length; l++) {
+
+                                        const dots = [playerDots[i], playerDots[j], playerDots[k], playerDots[l]];
+
+                                       
+
+                                        // Check if these dots form a square and include our temp dot
+
+                                        if (isSquare(dots) && dots.some(d => d.id === tempDot.id)) {
+
+                                            // Check if any of these dots are already used
+
+                                            const anyDotUsed = dots.some(d => d !== tempDot && usedDots.has(d.id));
+
+                                           
+
+                                            if (!anyDotUsed) {
+
+                                                return dot.element;
+
+                                            }
+
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+               
+
+                return null;
+
+            }
+
+           
+
+            function findBlockingDot() {
+
+                // Try to find a dot that would prevent player 1 from forming a square
+
+                for (const dot of availableDots) {
+
+                    // Temporarily add this dot to player 1's dots
+
+                    const tempDot = {
+
+                        x: dot.x,
+
+                        y: dot.y,
+
+                        id: dot.id,
+
+                        player: 1,
+
+                        element: dot.element
+
+                    };
+
+                   
+
+                    // Check if this would form a square for player 1
+
+                    const playerDots = selectedDots.filter(d => d.player === 1 && !usedDots.has(d.id));
+
+                    playerDots.push(tempDot);
+
+                   
+
+                    if (playerDots.length >= 4) {
+
+                        // Check all combinations of 4 dots
+
+                        for (let i = 0; i < playerDots.length; i++) {
+
+                            for (let j = i + 1; j < playerDots.length; j++) {
+
+                                for (let k = j + 1; k < playerDots.length; k++) {
+
+                                    for (let l = k + 1; l < playerDots.length; l++) {
+
+                                        const dots = [playerDots[i], playerDots[j], playerDots[k], playerDots[l]];
+
+                                       
+
+                                        // Check if these dots form a square and include our temp dot
+
+                                        if (isSquare(dots) && dots.some(d => d.id === tempDot.id)) {
+
+                                            // Check if any of these dots are already used
+
+                                            const anyDotUsed = dots.some(d => d !== tempDot && usedDots.has(d.id));
+
+                                           
+
+                                            if (!anyDotUsed) {
+
+                                                return dot.element;
+
+                                            }
+
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+               
+
+                return null;
+
+            }
+
+           
+
+            function findStrategicDot() {
+
+                // Choose a dot that's not too close to existing dots
+
+                // This is a simple strategy to spread out dots
+
+               
+
+                // If few dots selected, pick center or corners
+
+                if (selectedDots.length < 5) {
+
+                    // Try center first
+
+                    const centerDot = availableDots.find(dot =>
+
+                        dot.x === Math.floor(gridSize / 2) && dot.y === Math.floor(gridSize / 2)
+
+                    );
+
+                    if (centerDot) return centerDot.element;
+
+                   
+
+                    // Then try corners
+
+                    const corners = [
+
+                        {x: 0, y: 0},
+
+                        {x: 0, y: gridSize - 1},
+
+                        {x: gridSize - 1, y: 0},
+
+                        {x: gridSize - 1, y: gridSize - 1}
+
+                    ];
+
+                   
+
+                    for (const corner of corners) {
+
+                        const cornerDot = availableDots.find(dot =>
+
+                            dot.x === corner.x && dot.y === corner.y
+
+                        );
+
+                        if (cornerDot) return cornerDot.element;
+
+                    }
+
+                }
+
+               
+
+                // Otherwise, find a dot that's not adjacent to any existing dot
+
+                const nonAdjacentDots = availableDots.filter(dot => {
+
+                    return !selectedDots.some(selectedDot => {
+
+                        const dx = Math.abs(selectedDot.x - dot.x);
+
+                        const dy = Math.abs(selectedDot.y - dot.y);
+
+                        return dx <= 1 && dy <= 1;
+
+                    });
+
+                });
+
+               
+
+                if (nonAdjacentDots.length > 0) {
+
+                    const randomIndex = Math.floor(Math.random() * nonAdjacentDots.length);
+
+                    return nonAdjacentDots[randomIndex].element;
+
+                }
+
+               
+
+                // If all else fails, pick a random dot
+
+                return getRandomDot();
+
+            }
+
+           
+
+            function checkForSquares(newDot) {
+
+                let squaresFormed = 0;
+
+               
+
+                // Get all dots belonging to the current player that aren't already used in squares
+
+                const playerDots = selectedDots.filter(dot =>
+
+                    dot.player === currentPlayer && !usedDots.has(dot.id)
+
+                );
+
+               
+
+                // We need at least 4 dots to form a square
+
+                if (playerDots.length < 4) return 0;
+
+               
+
+                // Check all possible combinations of 4 dots
+
+                for (let i = 0; i < playerDots.length; i++) {
+
+                    for (let j = i + 1; j < playerDots.length; j++) {
+
+                        for (let k = j + 1; k < playerDots.length; k++) {
+
+                            for (let l = k + 1; l < playerDots.length; l++) {
+
+                                const dots = [playerDots[i], playerDots[j], playerDots[k], playerDots[l]];
+
+                               
+
+                                // Check if these 4 dots form a square
+
+                                if (isSquare(dots)) {
+
+                                    // Check if any of these dots are already used in a square
+
+                                    const anyDotUsed = dots.some(dot => usedDots.has(dot.id));
+
+                                   
+
+                                    if (!anyDotUsed) {
+
+                                        // Calculate the side length of the square
+
+                                        const sideLength = calculateSideLength(dots[0], dots[1]);
+
+                                       
+
+                                        // Calculate points based on square size (area)
+
+                                        const points = sideLength * sideLength;
+
+                                       
+
+                                        // Draw lines connecting the dots
+
+                                        drawSquareLines(dots);
+
+                                       
+
+                                        // Mark these dots as used
+
+                                        dots.forEach(dot => {
+
+                                            usedDots.add(dot.id);
+
+                                            dot.element.classList.add('used');
+
+                                        });
+
+                                       
+
+                                        // Add square to the list
+
+                                        squares.push({
+
+                                            dots: dots,
+
+                                            player: currentPlayer,
+
+                                            sideLength: sideLength
+
+                                        });
+
+                                       
+
+                                        squaresFormed += points;
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+               
+
+                // Round to 1 decimal place
+
+                return Math.round(squaresFormed * 10) / 10;
+
+            }
+
+           
+
+            function isGameOver() {
+
+                // Check if there are any possible squares that can be formed
+
+                // This is a simplified check - we just see if there are enough unused dots
+
+                const unusedDots = selectedDots.filter(dot => !usedDots.has(dot.id));
+
+                const player1Dots = unusedDots.filter(dot => dot.player === 1);
+
+                const player2Dots = unusedDots.filter(dot => dot.player === 2);
+
+               
+
+                // If either player has fewer than 4 unused dots, they can't form a square
+
+                if (player1Dots.length < 4 && player2Dots.length < 4) {
+
+                    // If there are still unselected dots, the game can continue
+
+                    if (availableDots.length > 0) {
+
+                        return false;
+
+                    }
+
+                    return true;
+
+                }
+
+               
+
+                // If all dots are used, the game is over
+
+                if (availableDots.length === 0) {
+
+                    return true;
+
+                }
+
+               
+
+                // Check if any possible square can be formed with the remaining dots
+
+                // This is a more complex check that would require testing all possible combinations
+
+                // For simplicity, we'll just return false here
+
+                return false;
+
+            }
+
+           
+
+            function endGame() {
+
+                gameActive = false;
+
+               
+
+                // Determine the winner
+
+                let winnerMessage;
+
+                if (scores[0] > scores[1]) {
+
+                    winnerMessage = `Player 1 wins with a score of ${scores[0].toFixed(1)}!`;
+
+                } else if (scores[1] > scores[0]) {
+
+                    winnerMessage = `${gameMode === 'computer' ? 'Computer' : 'Player 2'} wins with a score of ${scores[1].toFixed(1)}!`;
+
+                } else {
+
+                    winnerMessage = `It's a tie! Both players scored ${scores[0].toFixed(1)}.`;
+
+                }
+
+               
+
+                // Show game over screen
+
+                winnerText.textContent = winnerMessage;
+
+                gameStatus.textContent = "Game Over";
+
+               
+
+                // Show game over screen after a short delay
+
+                setTimeout(() => {
+
+                    gameBoard.classList.add('hidden');
+
+                    gameOverScreen.classList.remove('hidden');
+
+                }, 1500);
+
+            }
+
+           
+
+            function isSquare(dots) {
+
+                if (dots.length !== 4) return false;
+
+               
+
+                // Calculate all pairwise distances
+
+                const distances = [];
+
+                for (let i = 0; i < dots.length; i++) {
+
+                    for (let j = i + 1; j < dots.length; j++) {
+
+                        distances.push(calculateDistance(dots[i], dots[j]));
+
+                    }
+
+                }
+
+               
+
+                // Sort distances
+
+                distances.sort((a, b) => a - b);
+
+               
+
+                // For a square, we should have 4 equal sides and 2 equal diagonals
+
+                // So the first 4 distances should be equal (sides) and the last 2 should be equal (diagonals)
+
+                const sides = distances.slice(0, 4);
+
+                const diagonals = distances.slice(4, 6);
+
+               
+
+                // Check if all sides are equal and all diagonals are equal
+
+                const allSidesEqual = sides.every(side => Math.abs(side - sides[0]) < 0.001);
+
+                const allDiagonalsEqual = Math.abs(diagonals[0] - diagonals[1]) < 0.001;
+
+               
+
+                // For a square, diagonals should be sqrt(2) times the side length
+
+                const diagonalToSideRatio = diagonals[0] / sides[0];
+
+                const isRatioCorrect = Math.abs(diagonalToSideRatio - Math.sqrt(2)) < 0.001;
+
+               
+
+                return allSidesEqual && allDiagonalsEqual && isRatioCorrect;
+
+            }
+
+           
+
+            function calculateDistance(dot1, dot2) {
+
+                const dx = dot1.x - dot2.x;
+
+                const dy = dot1.y - dot2.y;
+
+                return Math.sqrt(dx * dx + dy * dy);
+
+            }
+
+           
+
+            function calculateSideLength(dot1, dot2) {
+
+                const dx = dot1.x - dot2.x;
+
+                const dy = dot1.y - dot2.y;
+
+                return Math.sqrt(dx * dx + dy * dy);
+
+            }
+
+           
+
+            function drawSquareLines(dots) {
+
+                // Sort dots to form a proper square (clockwise or counterclockwise)
+
+                const sortedDots = sortDotsInOrder(dots);
+
+               
+
+                // Draw lines between consecutive dots
+
+                for (let i = 0; i < sortedDots.length; i++) {
+
+                    const dot1 = sortedDots[i];
+
+                    const dot2 = sortedDots[(i + 1) % sortedDots.length];
+
+                    drawLine(dot1, dot2);
+
+                }
+
+            }
+
+           
+
+            function sortDotsInOrder(dots) {
+
+                // Find the center of the dots
+
+                const centerX = dots.reduce((sum, dot) => sum + dot.x, 0) / dots.length;
+
+                const centerY = dots.reduce((sum, dot) => sum + dot.y, 0) / dots.length;
+
+               
+
+                // Sort dots by their angle from the center
+
+                return [...dots].sort((a, b) => {
+
+                    const angleA = Math.atan2(a.y - centerY, a.x - centerX);
+
+                    const angleB = Math.atan2(b.y - centerY, b.x - centerX);
+
+                    return angleA - angleB;
+
+                });
+
+            }
+
+           
+
+            function drawLine(dot1, dot2) {
+
+                const x1 = dot1.x * spacing;
+
+                const y1 = dot1.y * spacing;
+
+                const x2 = dot2.x * spacing;
+
+                const y2 = dot2.y * spacing;
+
+               
+
+                // Calculate line length and angle
+
+                const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+
+                const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+
+               
+
+                // Create line element
+
+                const line = document.createElement('div');
+
+                line.className = `square-line player${currentPlayer}`;
+
+                line.style.width = `${length}px`;
+
+                line.style.height = `${lineThickness}px`;
+
+                line.style.left = `${x1}px`;
+
+                line.style.top = `${y1}px`;
+
+                line.style.transformOrigin = '0 50%';
+
+                line.style.transform = `rotate(${angle}deg)`;
+
+               
+
+                // Add animation
+
+                line.style.opacity = '0';
+
+                gridContainer.appendChild(line);
+
+               
+
+                setTimeout(() => {
+
+                    line.style.opacity = '1';
+
+                }, 10);
+
+            }
+
+           
+
+            function updatePlayerTurn() {
+
+                player1Card.classList.toggle('active', currentPlayer === 1);
+
+                player2Card.classList.toggle('active', currentPlayer === 2);
+
+                gameStatus.textContent = `${currentPlayer === 1 ? 'Player 1' : (gameMode === 'computer' ? 'Computer' : 'Player 2')}'s Turn`;
+
+            }
+
+           
+
+            function resetGame() {
+
+                currentPlayer = 1;
+
+                scores = [0.0, 0.0];
+
+                player1Score.textContent = "0.0";
+
+                player2Score.textContent = "0.0";
+
+                gameActive = true;
+
+                createGrid();
+
+                updatePlayerTurn();
+
+            }
+
+           
+
+            // Set default game mode
+
+            setGameMode('twoPlayer');
+
+        });
+
+    </script>
+
+</body>
+
+</html>

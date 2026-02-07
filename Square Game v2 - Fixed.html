@@ -1,0 +1,855 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.6">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 10.7px 0.0px; font: 13.3px Helvetica; -webkit-text-stroke: #000000}
+    span.s1 {font-kerning: none}
+    span.Apple-tab-span {white-space:pre}
+  </style>
+</head>
+<body>
+<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
+<p class="p1"><span class="s1">&lt;html lang="en"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;head&gt;</span></p>
+<p class="p1"><span class="s1">    &lt;meta charset="UTF-8"&gt;</span></p>
+<p class="p1"><span class="s1">    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span></p>
+<p class="p1"><span class="s1">    &lt;title&gt;Dot Grid Game&lt;/title&gt;</span></p>
+<p class="p1"><span class="s1">    &lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1">    &lt;style&gt;</span></p>
+<p class="p1"><span class="s1">        body {</span></p>
+<p class="p1"><span class="s1">            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;</span></p>
+<p class="p1"><span class="s1">            background-color: #2a2a2a; /* Dark grey background */</span></p>
+<p class="p1"><span class="s1">            min-height: 100vh;</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .dot {</span></p>
+<p class="p1"><span class="s1">            width: 20px;</span></p>
+<p class="p1"><span class="s1">            height: 20px;</span></p>
+<p class="p1"><span class="s1">            border-radius: 50%;</span></p>
+<p class="p1"><span class="s1">            background-color: #f3f4f6;</span></p>
+<p class="p1"><span class="s1">            cursor: pointer;</span></p>
+<p class="p1"><span class="s1">            transition: transform 0.2s, background-color 0.3s;</span></p>
+<p class="p1"><span class="s1">            box-shadow: 0 2px 4px rgba(0,0,0,0.1);</span></p>
+<p class="p1"><span class="s1">            position: absolute;</span></p>
+<p class="p1"><span class="s1">            transform: translate(-50%, -50%);</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .dot:hover {</span></p>
+<p class="p1"><span class="s1">            transform: translate(-50%, -50%) scale(1.2);</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .dot.player1 {</span></p>
+<p class="p1"><span class="s1">            background-color: #ff1a1a; /* Neon red */</span></p>
+<p class="p1"><span class="s1">            box-shadow: 0 0 10px #ff1a1a, 0 0 20px #ff1a1a;</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .dot.player2 {</span></p>
+<p class="p1"><span class="s1">            background-color: #1a75ff; /* Neon blue */</span></p>
+<p class="p1"><span class="s1">            box-shadow: 0 0 10px #1a75ff, 0 0 20px #1a75ff;</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .dot.used {</span></p>
+<p class="p1"><span class="s1">            opacity: 0.7;</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .square-line {</span></p>
+<p class="p1"><span class="s1">            position: absolute;</span></p>
+<p class="p1"><span class="s1">            z-index: -1;</span></p>
+<p class="p1"><span class="s1">            transition: all 0.3s ease;</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .square-line.player1 {</span></p>
+<p class="p1"><span class="s1">            background-color: rgba(255, 26, 26, 0.8); /* Neon red */</span></p>
+<p class="p1"><span class="s1">            box-shadow: 0 0 5px #ff1a1a, 0 0 10px #ff1a1a;</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .square-line.player2 {</span></p>
+<p class="p1"><span class="s1">            background-color: rgba(26, 117, 255, 0.8); /* Neon blue */</span></p>
+<p class="p1"><span class="s1">            box-shadow: 0 0 5px #1a75ff, 0 0 10px #1a75ff;</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .game-container {</span></p>
+<p class="p1"><span class="s1">            background-color: rgba(255, 255, 255, 0.05);</span></p>
+<p class="p1"><span class="s1">            backdrop-filter: blur(10px);</span></p>
+<p class="p1"><span class="s1">            border-radius: 16px;</span></p>
+<p class="p1"><span class="s1">            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .player-card {</span></p>
+<p class="p1"><span class="s1">            border-radius: 12px;</span></p>
+<p class="p1"><span class="s1">            transition: all 0.3s ease;</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .player-card.active {</span></p>
+<p class="p1"><span class="s1">            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);</span></p>
+<p class="p1"><span class="s1">            transform: translateY(-5px);</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .grid-container {</span></p>
+<p class="p1"><span class="s1">            position: relative;</span></p>
+<p class="p1"><span class="s1">            margin: 0 auto;</span></p>
+<p class="p1"><span class="s1">            background-color: rgba(255, 255, 255, 0.05);</span></p>
+<p class="p1"><span class="s1">            border-radius: 8px;</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .game-board-container {</span></p>
+<p class="p1"><span class="s1">            overflow: auto;</span></p>
+<p class="p1"><span class="s1">            max-width: 100%;</span></p>
+<p class="p1"><span class="s1">            max-height: 70vh;</span></p>
+<p class="p1"><span class="s1">            padding: 20px;</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .mode-btn {</span></p>
+<p class="p1"><span class="s1">            transition: all 0.3s ease;</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .mode-btn.active {</span></p>
+<p class="p1"><span class="s1">            transform: scale(1.05);</span></p>
+<p class="p1"><span class="s1">            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .difficulty-btn {</span></p>
+<p class="p1"><span class="s1">            transition: all 0.3s ease;</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .difficulty-btn.active {</span></p>
+<p class="p1"><span class="s1">            transform: scale(1.05);</span></p>
+<p class="p1"><span class="s1">            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .thinking {</span></p>
+<p class="p1"><span class="s1">            position: absolute;</span></p>
+<p class="p1"><span class="s1">            top: 10px;</span></p>
+<p class="p1"><span class="s1">            left: 50%;</span></p>
+<p class="p1"><span class="s1">            transform: translateX(-50%);</span></p>
+<p class="p1"><span class="s1">            background-color: rgba(0, 0, 0, 0.7);</span></p>
+<p class="p1"><span class="s1">            color: white;</span></p>
+<p class="p1"><span class="s1">            padding: 8px 16px;</span></p>
+<p class="p1"><span class="s1">            border-radius: 20px;</span></p>
+<p class="p1"><span class="s1">            z-index: 100;</span></p>
+<p class="p1"><span class="s1">            display: none;</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        .thinking.visible {</span></p>
+<p class="p1"><span class="s1">            display: block;</span></p>
+<p class="p1"><span class="s1">            animation: pulse 1.5s infinite;</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">        @keyframes pulse {</span></p>
+<p class="p1"><span class="s1">            0% { opacity: 0.7; }</span></p>
+<p class="p1"><span class="s1">            50% { opacity: 1; }</span></p>
+<p class="p1"><span class="s1">            100% { opacity: 0.7; }</span></p>
+<p class="p1"><span class="s1">        }</span></p>
+<p class="p1"><span class="s1">    &lt;/style&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
+<p class="p1"><span class="s1">&lt;body class="p-4"&gt;</span></p>
+<p class="p1"><span class="s1">    &lt;div class="max-w-6xl mx-auto my-8 game-container p-6"&gt;</span></p>
+<p class="p1"><span class="s1">        &lt;h1 class="text-4xl font-bold text-center text-white mb-6"&gt;Dot Grid Game&lt;/h1&gt;</span></p>
+<p class="p1"><span class="s1">       </span></p>
+<p class="p1"><span class="s1">        &lt;!-- Game Mode Selection --&gt;</span></p>
+<p class="p1"><span class="s1">        &lt;div id="modeSelection" class="mb-8"&gt;</span></p>
+<p class="p1"><span class="s1">            &lt;h2 class="text-2xl font-bold text-center text-white mb-4"&gt;Select Game Mode&lt;/h2&gt;</span></p>
+<p class="p1"><span class="s1">            &lt;div class="flex justify-center gap-4"&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;button id="twoPlayerMode" class="mode-btn bg-gradient-to-br from-purple-600 to-purple-800 p-4 text-white rounded-lg w-48 text-center active"&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;div class="text-xl font-bold"&gt;Two Players&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;div class="mt-2 text-sm"&gt;Play against a friend&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;button id="computerMode" class="mode-btn bg-gradient-to-br from-green-600 to-green-800 p-4 text-white rounded-lg w-48 text-center"&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;div class="text-xl font-bold"&gt;Computer&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;div class="mt-2 text-sm"&gt;Play against AI&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">            &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            &lt;!-- Difficulty Selection (hidden by default) --&gt;</span></p>
+<p class="p1"><span class="s1">            &lt;div id="difficultySelection" class="mt-4 hidden"&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;h3 class="text-xl font-bold text-center text-white mb-3"&gt;Select Difficulty&lt;/h3&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;div class="flex justify-center gap-3"&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;button id="easyMode" class="difficulty-btn bg-gradient-to-br from-green-500 to-green-700 p-3 text-white rounded-lg w-32 text-center active"&gt;</span></p>
+<p class="p1"><span class="s1">                        &lt;div class="font-bold"&gt;Easy&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;button id="mediumMode" class="difficulty-btn bg-gradient-to-br from-yellow-500 to-yellow-700 p-3 text-white rounded-lg w-32 text-center"&gt;</span></p>
+<p class="p1"><span class="s1">                        &lt;div class="font-bold"&gt;Medium&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;button id="hardMode" class="difficulty-btn bg-gradient-to-br from-red-500 to-red-700 p-3 text-white rounded-lg w-32 text-center"&gt;</span></p>
+<p class="p1"><span class="s1">                        &lt;div class="font-bold"&gt;Hard&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">            &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            &lt;div class="flex justify-center mt-6"&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;button id="startGameBtn" class="bg-white text-gray-800 px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition"&gt;</span></p>
+<p class="p1"><span class="s1">                    Start Game</span></p>
+<p class="p1"><span class="s1">                &lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">            &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">        &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">       </span></p>
+<p class="p1"><span class="s1">        &lt;!-- Game Board (hidden by default) --&gt;</span></p>
+<p class="p1"><span class="s1">        &lt;div id="gameBoard" class="hidden"&gt;</span></p>
+<p class="p1"><span class="s1">            &lt;div class="flex justify-between mb-8"&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;div id="player1Card" class="player-card bg-gradient-to-br from-red-600 to-red-800 p-4 text-white w-48 text-center"&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;h2 class="text-xl font-bold"&gt;Player 1&lt;/h2&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;p class="text-3xl font-bold mt-2" id="player1Score"&gt;0.0&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;div class="mt-2 text-sm"&gt;Red&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span>&lt;div id="player1Card" class="player-card bg-gradient-to-br from-red-600 to-red-800 p-4 text-white w-48 text-center"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    <span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span></span>&lt;h2 class="text-xl font-bold"&gt;Player 1&lt;/h2&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">   <span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span> </span>&lt;p class="text-3xl font-bold mt-2" id="player1Score"&gt;0.0&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  <span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span>  </span>&lt;div class="mt-2 text-sm"&gt;Red&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  <span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span>  </span>&lt;div class="mt-6 text-sm" id="player1Timer"&gt;Time: 0s&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                &lt;div class="bg-white bg-opacity-10 rounded-lg p-3 text-white text-center"&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;p id="gameStatus" class="font-medium"&gt;Player 1's Turn&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;div id="thinking" class="thinking"&gt;Computer is thinking...&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;button id="resetButton" class="mt-2 bg-white text-gray-800 px-4 py-1 rounded-full font-medium hover:bg-gray-100 transition"&gt;Reset Game&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;button id="newGameButton" class="mt-2 bg-white text-gray-800 px-4 py-1 rounded-full font-medium hover:bg-gray-100 transition"&gt;New Game&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                &lt;div id="player2Card" class="player-card bg-gradient-to-br from-blue-600 to-blue-800 p-4 text-white w-48 text-center"&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;h2 class="text-xl font-bold" id="player2Name"&gt;Player 2&lt;/h2&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;p class="text-3xl font-bold mt-2" id="player2Score"&gt;0.0&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;div class="mt-2 text-sm"&gt;Blue&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span>&lt;div id="player2Card" class="player-card bg-gradient-to-br from-blue-600 to-blue-800 p-4 text-white w-48 text-center"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    <span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span></span>&lt;h2 class="text-xl font-bold" id="player2Name"&gt;Player 2&lt;/h2&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    <span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span></span>&lt;p class="text-3xl font-bold mt-2" id="player2Score"&gt;0.0&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    <span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span></span>&lt;div class="mt-2 text-sm"&gt;Blue&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    <span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span></span>&lt;div class="mt-6 text-sm" id="player2Timer"&gt;Time: 0s&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">            &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            &lt;div class="flex justify-center mb-6 relative"&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;div class="bg-black bg-opacity-20 rounded-lg game-board-container"&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;div id="gridContainer" class="grid-container"&gt;</span></p>
+<p class="p1"><span class="s1">                        &lt;!-- Dots and lines will be generated here --&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">            &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            &lt;div class="text-white text-center bg-black bg-opacity-20 p-4 rounded-lg"&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;h3 class="font-bold mb-2"&gt;How to Play&lt;/h3&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;p&gt;Players take turns selecting dots. When a player's selections form a square of any size, they earn points based on the square size.&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;p class="mt-2"&gt;&lt;span class="font-bold"&gt;Scoring:&lt;/span&gt; 1×1 square = 1 point, 2×2 square = 4 points, 3×3 square = 9 points, etc.&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;p class="mt-2"&gt;&lt;span class="font-bold"&gt;Rules:&lt;/span&gt; Once a dot is part of a square, it cannot be used to form another square. The game ends when no more squares can be formed.&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">            &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">        &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">       </span></p>
+<p class="p1"><span class="s1">        &lt;!-- Game Over Screen (hidden by default) --&gt;</span></p>
+<p class="p1"><span class="s1">        &lt;div id="gameOverScreen" class="hidden"&gt;</span></p>
+<p class="p1"><span class="s1">            &lt;div class="bg-black bg-opacity-30 p-8 rounded-xl text-center"&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;h2 class="text-3xl font-bold text-white mb-4"&gt;Game Over!&lt;/h2&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;p id="winnerText" class="text-2xl text-white mb-6"&gt;Player 1 wins with a score of 10.0!&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;div class="flex justify-center gap-4"&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;button id="playAgainBtn" class="bg-white text-gray-800 px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition"&gt;</span></p>
+<p class="p1"><span class="s1">                        Play Again</span></p>
+<p class="p1"><span class="s1">                    &lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">                    &lt;button id="newGameBtn" class="bg-white text-gray-800 px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition"&gt;</span></p>
+<p class="p1"><span class="s1">                        New Game</span></p>
+<p class="p1"><span class="s1">                    &lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">            &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">        &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">    &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"> </span></p>
+<p class="p1"><span class="s1">    &lt;script&gt;</span></p>
+<p class="p1"><span class="s1">        document.addEventListener('DOMContentLoaded', function() {</span></p>
+<p class="p1"><span class="s1">            // DOM Elements</span></p>
+<p class="p1"><span class="s1">            const modeSelection = document.getElementById('modeSelection');</span></p>
+<p class="p1"><span class="s1">            const gameBoard = document.getElementById('gameBoard');</span></p>
+<p class="p1"><span class="s1">            const gameOverScreen = document.getElementById('gameOverScreen');</span></p>
+<p class="p1"><span class="s1">            const difficultySelection = document.getElementById('difficultySelection');</span></p>
+<p class="p1"><span class="s1">            const twoPlayerModeBtn = document.getElementById('twoPlayerMode');</span></p>
+<p class="p1"><span class="s1">            const computerModeBtn = document.getElementById('computerMode');</span></p>
+<p class="p1"><span class="s1">            const easyModeBtn = document.getElementById('easyMode');</span></p>
+<p class="p1"><span class="s1">            const mediumModeBtn = document.getElementById('mediumMode');</span></p>
+<p class="p1"><span class="s1">            const hardModeBtn = document.getElementById('hardMode');</span></p>
+<p class="p1"><span class="s1">            const startGameBtn = document.getElementById('startGameBtn');</span></p>
+<p class="p1"><span class="s1">            const resetButton = document.getElementById('resetButton');</span></p>
+<p class="p1"><span class="s1">            const newGameButton = document.getElementById('newGameButton');</span></p>
+<p class="p1"><span class="s1">            const playAgainBtn = document.getElementById('playAgainBtn');</span></p>
+<p class="p1"><span class="s1">            const newGameBtn = document.getElementById('newGameBtn');</span></p>
+<p class="p1"><span class="s1">            const gridContainer = document.getElementById('gridContainer');</span></p>
+<p class="p1"><span class="s1">            const player1Score = document.getElementById('player1Score');</span></p>
+<p class="p1"><span class="s1">            const player2Score = document.getElementById('player2Score');</span></p>
+<p class="p1"><span class="s1">            const player1Card = document.getElementById('player1Card');</span></p>
+<p class="p1"><span class="s1">            const player2Card = document.getElementById('player2Card');</span></p>
+<p class="p1"><span class="s1">            const player2Name = document.getElementById('player2Name');</span></p>
+<p class="p1"><span class="s1">            const gameStatus = document.getElementById('gameStatus');</span></p>
+<p class="p1"><span class="s1">            const winnerText = document.getElementById('winnerText');</span></p>
+<p class="p1"><span class="s1">            const thinkingIndicator = document.getElementById('thinking');</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            // Game settings</span></p>
+<p class="p1"><span class="s1">            const gridSize = 10;</span></p>
+<p class="p1"><span class="s1">            const spacing = 48.75;</span></p>
+<p class="p1"><span class="s1">            const dotSize = 20;</span></p>
+<p class="p1"><span class="s1">            const lineThickness = dotSize / 3;</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            // Game state</span></p>
+<p class="p1"><span class="s1">            let gameMode = 'twoPlayer'; // 'twoPlayer' or 'computer'</span></p>
+<p class="p1"><span class="s1">            let difficulty = 'easy'; // 'easy', 'medium', or 'hard'</span></p>
+<p class="p1"><span class="s1">            let currentPlayer = 1;</span></p>
+<p class="p1"><span class="s1">            let scores = [0.0, 0.0];</span></p>
+<p class="p1"><span class="s1">            let selectedDots = [];</span></p>
+<p class="p1"><span class="s1">            let squares = [];</span></p>
+<p class="p1"><span class="s1">            let usedDots = new Set();</span></p>
+<p class="p1"><span class="s1">            let gameActive = true;</span></p>
+<p class="p1"><span class="s1">            let availableDots = [];</span></p>
+<p class="p1"><span class="s1">            let computerThinking = false;</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            // Event listeners for mode selection</span></p>
+<p class="p1"><span class="s1">            twoPlayerModeBtn.addEventListener('click', function() {</span></p>
+<p class="p1"><span class="s1">                setGameMode('twoPlayer');</span></p>
+<p class="p1"><span class="s1">            });</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            computerModeBtn.addEventListener('click', function() {</span></p>
+<p class="p1"><span class="s1">                setGameMode('computer');</span></p>
+<p class="p1"><span class="s1">            });</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            // Event listeners for difficulty selection</span></p>
+<p class="p1"><span class="s1">            easyModeBtn.addEventListener('click', function() {</span></p>
+<p class="p1"><span class="s1">                setDifficulty('easy');</span></p>
+<p class="p1"><span class="s1">            });</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            mediumModeBtn.addEventListener('click', function() {</span></p>
+<p class="p1"><span class="s1">                setDifficulty('medium');</span></p>
+<p class="p1"><span class="s1">            });</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            hardModeBtn.addEventListener('click', function() {</span></p>
+<p class="p1"><span class="s1">                setDifficulty('hard');</span></p>
+<p class="p1"><span class="s1">            });</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            // Start game button</span></p>
+<p class="p1"><span class="s1">            startGameBtn.addEventListener('click', function() {</span></p>
+<p class="p1"><span class="s1">                modeSelection.classList.add('hidden');</span></p>
+<p class="p1"><span class="s1">                gameBoard.classList.remove('hidden');</span></p>
+<p class="p1"><span class="s1">                initializeGame();</span></p>
+<p class="p1"><span class="s1">            });</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            // Reset and new game buttons</span></p>
+<p class="p1"><span class="s1">            resetButton.addEventListener('click', resetGame);</span></p>
+<p class="p1"><span class="s1">            newGameButton.addEventListener('click', showModeSelection);</span></p>
+<p class="p1"><span class="s1">            playAgainBtn.addEventListener('click', function() {</span></p>
+<p class="p1"><span class="s1">                gameOverScreen.classList.add('hidden');</span></p>
+<p class="p1"><span class="s1">                gameBoard.classList.remove('hidden');</span></p>
+<p class="p1"><span class="s1">                initializeGame();</span></p>
+<p class="p1"><span class="s1">            });</span></p>
+<p class="p1"><span class="s1">            newGameBtn.addEventListener('click', showModeSelection);</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function setGameMode(mode) {</span></p>
+<p class="p1"><span class="s1">                gameMode = mode;</span></p>
+<p class="p1"><span class="s1">                twoPlayerModeBtn.classList.toggle('active', mode === 'twoPlayer');</span></p>
+<p class="p1"><span class="s1">                computerModeBtn.classList.toggle('active', mode === 'computer');</span></p>
+<p class="p1"><span class="s1">                difficultySelection.classList.toggle('hidden', mode === 'twoPlayer');</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function setDifficulty(level) {</span></p>
+<p class="p1"><span class="s1">                difficulty = level;</span></p>
+<p class="p1"><span class="s1">                easyModeBtn.classList.toggle('active', level === 'easy');</span></p>
+<p class="p1"><span class="s1">                mediumModeBtn.classList.toggle('active', level === 'medium');</span></p>
+<p class="p1"><span class="s1">                hardModeBtn.classList.toggle('active', level === 'hard');</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function showModeSelection() {</span></p>
+<p class="p1"><span class="s1">                gameBoard.classList.add('hidden');</span></p>
+<p class="p1"><span class="s1">                gameOverScreen.classList.add('hidden');</span></p>
+<p class="p1"><span class="s1">                modeSelection.classList.remove('hidden');</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function initializeGame() {</span></p>
+<p class="p1"><span class="s1">                currentPlayer = 1;</span></p>
+<p class="p1"><span class="s1">                scores = [0.0, 0.0];</span></p>
+<p class="p1"><span class="s1">                player1Score.textContent = "0.0";</span></p>
+<p class="p1"><span class="s1">                player2Score.textContent = "0.0";</span></p>
+<p class="p1"><span class="s1">                gameActive = true;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Update player 2 name based on game mode</span></p>
+<p class="p1"><span class="s1">                if (gameMode === 'computer') {</span></p>
+<p class="p1"><span class="s1">                    player2Name.textContent = "Computer";</span></p>
+<p class="p1"><span class="s1">                } else {</span></p>
+<p class="p1"><span class="s1">                    player2Name.textContent = "Player 2";</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                createGrid();</span></p>
+<p class="p1"><span class="s1">                updatePlayerTurn();</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function createGrid() {</span></p>
+<p class="p1"><span class="s1">                gridContainer.innerHTML = '';</span></p>
+<p class="p1"><span class="s1">                selectedDots = [];</span></p>
+<p class="p1"><span class="s1">                squares = [];</span></p>
+<p class="p1"><span class="s1">                usedDots = new Set();</span></p>
+<p class="p1"><span class="s1">                availableDots = [];</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Set grid container size</span></p>
+<p class="p1"><span class="s1">                const gridWidth = (gridSize - 1) * spacing;</span></p>
+<p class="p1"><span class="s1">                const gridHeight = (gridSize - 1) * spacing;</span></p>
+<p class="p1"><span class="s1">                gridContainer.style.width = `${gridWidth}px`;</span></p>
+<p class="p1"><span class="s1">                gridContainer.style.height = `${gridHeight}px`;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Create dots</span></p>
+<p class="p1"><span class="s1">                for (let y = 0; y &lt; gridSize; y++) {</span></p>
+<p class="p1"><span class="s1">                    for (let x = 0; x &lt; gridSize; x++) {</span></p>
+<p class="p1"><span class="s1">                        const dot = document.createElement('div');</span></p>
+<p class="p1"><span class="s1">                        dot.className = 'dot';</span></p>
+<p class="p1"><span class="s1">                        dot.style.left = `${x * spacing}px`;</span></p>
+<p class="p1"><span class="s1">                        dot.style.top = `${y * spacing}px`;</span></p>
+<p class="p1"><span class="s1">                        dot.dataset.x = x;</span></p>
+<p class="p1"><span class="s1">                        dot.dataset.y = y;</span></p>
+<p class="p1"><span class="s1">                        dot.dataset.id = `${x}-${y}`;</span></p>
+<p class="p1"><span class="s1">                       </span></p>
+<p class="p1"><span class="s1">                        dot.addEventListener('click', function() {</span></p>
+<p class="p1"><span class="s1">                            if (!gameActive || computerThinking) return;</span></p>
+<p class="p1"><span class="s1">                           </span></p>
+<p class="p1"><span class="s1">                            if (!this.classList.contains('player1') &amp;&amp; !this.classList.contains('player2')) {</span></p>
+<p class="p1"><span class="s1">                                handleDotSelection(this);</span></p>
+<p class="p1"><span class="s1">                            }</span></p>
+<p class="p1"><span class="s1">                        });</span></p>
+<p class="p1"><span class="s1">                       </span></p>
+<p class="p1"><span class="s1">                        gridContainer.appendChild(dot);</span></p>
+<p class="p1"><span class="s1">                        availableDots.push({</span></p>
+<p class="p1"><span class="s1">                            x: x,</span></p>
+<p class="p1"><span class="s1">                            y: y,</span></p>
+<p class="p1"><span class="s1">                            id: `${x}-${y}`,</span></p>
+<p class="p1"><span class="s1">                            element: dot</span></p>
+<p class="p1"><span class="s1">                        });</span></p>
+<p class="p1"><span class="s1">                    }</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function handleDotSelection(dotElement) {</span></p>
+<p class="p1"><span class="s1">                dotElement.classList.add(`player${currentPlayer}`);</span></p>
+<p class="p1"><span class="s1">                const dotInfo = {</span></p>
+<p class="p1"><span class="s1">                    x: parseInt(dotElement.dataset.x),</span></p>
+<p class="p1"><span class="s1">                    y: parseInt(dotElement.dataset.y),</span></p>
+<p class="p1"><span class="s1">                    id: dotElement.dataset.id,</span></p>
+<p class="p1"><span class="s1">                    player: currentPlayer,</span></p>
+<p class="p1"><span class="s1">                    element: dotElement</span></p>
+<p class="p1"><span class="s1">                };</span></p>
+<p class="p1"><span class="s1">                selectedDots.push(dotInfo);</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Remove from available dots</span></p>
+<p class="p1"><span class="s1">                availableDots = availableDots.filter(dot =&gt; dot.id !== dotInfo.id);</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Check for squares with the new dot</span></p>
+<p class="p1"><span class="s1">                const squaresFormed = checkForSquares(dotInfo);</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Update score if squares were formed</span></p>
+<p class="p1"><span class="s1">                if (squaresFormed &gt; 0) {</span></p>
+<p class="p1"><span class="s1">                    scores[currentPlayer - 1] += squaresFormed;</span></p>
+<p class="p1"><span class="s1">                    // Round to 1 decimal place</span></p>
+<p class="p1"><span class="s1">                    scores[currentPlayer - 1] = Math.round(scores[currentPlayer - 1] * 10) / 10;</span></p>
+<p class="p1"><span class="s1">                    const scoreElement = currentPlayer === 1 ? player1Score : player2Score;</span></p>
+<p class="p1"><span class="s1">                    scoreElement.textContent = scores[currentPlayer - 1].toFixed(1);</span></p>
+<p class="p1"><span class="s1">                    gameStatus.textContent = `${currentPlayer === 1 ? 'Player 1' : (gameMode === 'computer' ? 'Computer' : 'Player 2')} formed ${squaresFormed.toFixed(1)} points!`;</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Check if game is over</span></p>
+<p class="p1"><span class="s1">                if (isGameOver()) {</span></p>
+<p class="p1"><span class="s1">                    endGame();</span></p>
+<p class="p1"><span class="s1">                    return;</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Switch player</span></p>
+<p class="p1"><span class="s1">                currentPlayer = currentPlayer === 1 ? 2 : 1;</span></p>
+<p class="p1"><span class="s1">                updatePlayerTurn();</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // If it's computer's turn</span></p>
+<p class="p1"><span class="s1">                if (gameActive &amp;&amp; gameMode === 'computer' &amp;&amp; currentPlayer === 2) {</span></p>
+<p class="p1"><span class="s1">                    computerTurn();</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function computerTurn() {</span></p>
+<p class="p1"><span class="s1">                computerThinking = true;</span></p>
+<p class="p1"><span class="s1">                thinkingIndicator.classList.add('visible');</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Add a delay to simulate thinking</span></p>
+<p class="p1"><span class="s1">                setTimeout(() =&gt; {</span></p>
+<p class="p1"><span class="s1">                    const dotElement = selectDotForComputer();</span></p>
+<p class="p1"><span class="s1">                    if (dotElement) {</span></p>
+<p class="p1"><span class="s1">                        handleDotSelection(dotElement);</span></p>
+<p class="p1"><span class="s1">                    }</span></p>
+<p class="p1"><span class="s1">                    computerThinking = false;</span></p>
+<p class="p1"><span class="s1">                    thinkingIndicator.classList.remove('visible');</span></p>
+<p class="p1"><span class="s1">                }, 1000);</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function selectDotForComputer() {</span></p>
+<p class="p1"><span class="s1">                if (availableDots.length === 0) return null;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                switch (difficulty) {</span></p>
+<p class="p1"><span class="s1">                    case 'easy':</span></p>
+<p class="p1"><span class="s1">                        // Random selection</span></p>
+<p class="p1"><span class="s1">                        return getRandomDot();</span></p>
+<p class="p1"><span class="s1">                    case 'medium':</span></p>
+<p class="p1"><span class="s1">                        // 50% chance of making a smart move, 50% random</span></p>
+<p class="p1"><span class="s1">                        if (Math.random() &lt; 0.5) {</span></p>
+<p class="p1"><span class="s1">                            const smartDot = findPotentialSquareDot();</span></p>
+<p class="p1"><span class="s1">                            if (smartDot) return smartDot;</span></p>
+<p class="p1"><span class="s1">                        }</span></p>
+<p class="p1"><span class="s1">                        return getRandomDot();</span></p>
+<p class="p1"><span class="s1">                    case 'hard':</span></p>
+<p class="p1"><span class="s1">                        // Try to find a dot that forms a square</span></p>
+<p class="p1"><span class="s1">                        const smartDot = findPotentialSquareDot();</span></p>
+<p class="p1"><span class="s1">                        if (smartDot) return smartDot;</span></p>
+<p class="p1"><span class="s1">                       </span></p>
+<p class="p1"><span class="s1">                        // If no square-forming dot found, try to block player</span></p>
+<p class="p1"><span class="s1">                        const blockingDot = findBlockingDot();</span></p>
+<p class="p1"><span class="s1">                        if (blockingDot) return blockingDot;</span></p>
+<p class="p1"><span class="s1">                       </span></p>
+<p class="p1"><span class="s1">                        // Otherwise, choose a strategic dot</span></p>
+<p class="p1"><span class="s1">                        return findStrategicDot();</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function getRandomDot() {</span></p>
+<p class="p1"><span class="s1">                const randomIndex = Math.floor(Math.random() * availableDots.length);</span></p>
+<p class="p1"><span class="s1">                return availableDots[randomIndex].element;</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function findPotentialSquareDot() {</span></p>
+<p class="p1"><span class="s1">                // Try each available dot to see if it forms a square</span></p>
+<p class="p1"><span class="s1">                for (const dot of availableDots) {</span></p>
+<p class="p1"><span class="s1">                    // Temporarily add this dot to selected dots</span></p>
+<p class="p1"><span class="s1">                    const tempDot = {</span></p>
+<p class="p1"><span class="s1">                        x: dot.x,</span></p>
+<p class="p1"><span class="s1">                        y: dot.y,</span></p>
+<p class="p1"><span class="s1">                        id: dot.id,</span></p>
+<p class="p1"><span class="s1">                        player: 2,</span></p>
+<p class="p1"><span class="s1">                        element: dot.element</span></p>
+<p class="p1"><span class="s1">                    };</span></p>
+<p class="p1"><span class="s1">                   </span></p>
+<p class="p1"><span class="s1">                    // Check if this would form a square</span></p>
+<p class="p1"><span class="s1">                    const playerDots = selectedDots.filter(d =&gt; d.player === 2 &amp;&amp; !usedDots.has(d.id));</span></p>
+<p class="p1"><span class="s1">                    playerDots.push(tempDot);</span></p>
+<p class="p1"><span class="s1">                   </span></p>
+<p class="p1"><span class="s1">                    if (playerDots.length &gt;= 4) {</span></p>
+<p class="p1"><span class="s1">                        // Check all combinations of 4 dots</span></p>
+<p class="p1"><span class="s1">                        for (let i = 0; i &lt; playerDots.length; i++) {</span></p>
+<p class="p1"><span class="s1">                            for (let j = i + 1; j &lt; playerDots.length; j++) {</span></p>
+<p class="p1"><span class="s1">                                for (let k = j + 1; k &lt; playerDots.length; k++) {</span></p>
+<p class="p1"><span class="s1">                                    for (let l = k + 1; l &lt; playerDots.length; l++) {</span></p>
+<p class="p1"><span class="s1">                                        const dots = [playerDots[i], playerDots[j], playerDots[k], playerDots[l]];</span></p>
+<p class="p1"><span class="s1">                                       </span></p>
+<p class="p1"><span class="s1">                                        // Check if these dots form a square and include our temp dot</span></p>
+<p class="p1"><span class="s1">                                        if (isSquare(dots) &amp;&amp; dots.some(d =&gt; d.id === tempDot.id)) {</span></p>
+<p class="p1"><span class="s1">                                            // Check if any of these dots are already used</span></p>
+<p class="p1"><span class="s1">                                            const anyDotUsed = dots.some(d =&gt; d !== tempDot &amp;&amp; usedDots.has(d.id));</span></p>
+<p class="p1"><span class="s1">                                           </span></p>
+<p class="p1"><span class="s1">                                            if (!anyDotUsed) {</span></p>
+<p class="p1"><span class="s1">                                                return dot.element;</span></p>
+<p class="p1"><span class="s1">                                            }</span></p>
+<p class="p1"><span class="s1">                                        }</span></p>
+<p class="p1"><span class="s1">                                    }</span></p>
+<p class="p1"><span class="s1">                                }</span></p>
+<p class="p1"><span class="s1">                            }</span></p>
+<p class="p1"><span class="s1">                        }</span></p>
+<p class="p1"><span class="s1">                    }</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                return null;</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function findBlockingDot() {</span></p>
+<p class="p1"><span class="s1">                // Try to find a dot that would prevent player 1 from forming a square</span></p>
+<p class="p1"><span class="s1">                for (const dot of availableDots) {</span></p>
+<p class="p1"><span class="s1">                    // Temporarily add this dot to player 1's dots</span></p>
+<p class="p1"><span class="s1">                    const tempDot = {</span></p>
+<p class="p1"><span class="s1">                        x: dot.x,</span></p>
+<p class="p1"><span class="s1">                        y: dot.y,</span></p>
+<p class="p1"><span class="s1">                        id: dot.id,</span></p>
+<p class="p1"><span class="s1">                        player: 1,</span></p>
+<p class="p1"><span class="s1">                        element: dot.element</span></p>
+<p class="p1"><span class="s1">                    };</span></p>
+<p class="p1"><span class="s1">                   </span></p>
+<p class="p1"><span class="s1">                    // Check if this would form a square for player 1</span></p>
+<p class="p1"><span class="s1">                    const playerDots = selectedDots.filter(d =&gt; d.player === 1 &amp;&amp; !usedDots.has(d.id));</span></p>
+<p class="p1"><span class="s1">                    playerDots.push(tempDot);</span></p>
+<p class="p1"><span class="s1">                   </span></p>
+<p class="p1"><span class="s1">                    if (playerDots.length &gt;= 4) {</span></p>
+<p class="p1"><span class="s1">                        // Check all combinations of 4 dots</span></p>
+<p class="p1"><span class="s1">                        for (let i = 0; i &lt; playerDots.length; i++) {</span></p>
+<p class="p1"><span class="s1">                            for (let j = i + 1; j &lt; playerDots.length; j++) {</span></p>
+<p class="p1"><span class="s1">                                for (let k = j + 1; k &lt; playerDots.length; k++) {</span></p>
+<p class="p1"><span class="s1">                                    for (let l = k + 1; l &lt; playerDots.length; l++) {</span></p>
+<p class="p1"><span class="s1">                                        const dots = [playerDots[i], playerDots[j], playerDots[k], playerDots[l]];</span></p>
+<p class="p1"><span class="s1">                                       </span></p>
+<p class="p1"><span class="s1">                                        // Check if these dots form a square and include our temp dot</span></p>
+<p class="p1"><span class="s1">                                        if (isSquare(dots) &amp;&amp; dots.some(d =&gt; d.id === tempDot.id)) {</span></p>
+<p class="p1"><span class="s1">                                            // Check if any of these dots are already used</span></p>
+<p class="p1"><span class="s1">                                            const anyDotUsed = dots.some(d =&gt; d !== tempDot &amp;&amp; usedDots.has(d.id));</span></p>
+<p class="p1"><span class="s1">                                           </span></p>
+<p class="p1"><span class="s1">                                            if (!anyDotUsed) {</span></p>
+<p class="p1"><span class="s1">                                                return dot.element;</span></p>
+<p class="p1"><span class="s1">                                            }</span></p>
+<p class="p1"><span class="s1">                                        }</span></p>
+<p class="p1"><span class="s1">                                    }</span></p>
+<p class="p1"><span class="s1">                                }</span></p>
+<p class="p1"><span class="s1">                            }</span></p>
+<p class="p1"><span class="s1">                        }</span></p>
+<p class="p1"><span class="s1">                    }</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                return null;</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function findStrategicDot() {</span></p>
+<p class="p1"><span class="s1">                // Choose a dot that's not too close to existing dots</span></p>
+<p class="p1"><span class="s1">                // This is a simple strategy to spread out dots</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // If few dots selected, pick center or corners</span></p>
+<p class="p1"><span class="s1">                if (selectedDots.length &lt; 5) {</span></p>
+<p class="p1"><span class="s1">                    // Try center first</span></p>
+<p class="p1"><span class="s1">                    const centerDot = availableDots.find(dot =&gt;</span></p>
+<p class="p1"><span class="s1">                        dot.x === Math.floor(gridSize / 2) &amp;&amp; dot.y === Math.floor(gridSize / 2)</span></p>
+<p class="p1"><span class="s1">                    );</span></p>
+<p class="p1"><span class="s1">                    if (centerDot) return centerDot.element;</span></p>
+<p class="p1"><span class="s1">                   </span></p>
+<p class="p1"><span class="s1">                    // Then try corners</span></p>
+<p class="p1"><span class="s1">                    const corners = [</span></p>
+<p class="p1"><span class="s1">                        {x: 0, y: 0},</span></p>
+<p class="p1"><span class="s1">                        {x: 0, y: gridSize - 1},</span></p>
+<p class="p1"><span class="s1">                        {x: gridSize - 1, y: 0},</span></p>
+<p class="p1"><span class="s1">                        {x: gridSize - 1, y: gridSize - 1}</span></p>
+<p class="p1"><span class="s1">                    ];</span></p>
+<p class="p1"><span class="s1">                   </span></p>
+<p class="p1"><span class="s1">                    for (const corner of corners) {</span></p>
+<p class="p1"><span class="s1">                        const cornerDot = availableDots.find(dot =&gt;</span></p>
+<p class="p1"><span class="s1">                            dot.x === corner.x &amp;&amp; dot.y === corner.y</span></p>
+<p class="p1"><span class="s1">                        );</span></p>
+<p class="p1"><span class="s1">                        if (cornerDot) return cornerDot.element;</span></p>
+<p class="p1"><span class="s1">                    }</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Otherwise, find a dot that's not adjacent to any existing dot</span></p>
+<p class="p1"><span class="s1">                const nonAdjacentDots = availableDots.filter(dot =&gt; {</span></p>
+<p class="p1"><span class="s1">                    return !selectedDots.some(selectedDot =&gt; {</span></p>
+<p class="p1"><span class="s1">                        const dx = Math.abs(selectedDot.x - dot.x);</span></p>
+<p class="p1"><span class="s1">                        const dy = Math.abs(selectedDot.y - dot.y);</span></p>
+<p class="p1"><span class="s1">                        return dx &lt;= 1 &amp;&amp; dy &lt;= 1;</span></p>
+<p class="p1"><span class="s1">                    });</span></p>
+<p class="p1"><span class="s1">                });</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                if (nonAdjacentDots.length &gt; 0) {</span></p>
+<p class="p1"><span class="s1">                    const randomIndex = Math.floor(Math.random() * nonAdjacentDots.length);</span></p>
+<p class="p1"><span class="s1">                    return nonAdjacentDots[randomIndex].element;</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // If all else fails, pick a random dot</span></p>
+<p class="p1"><span class="s1">                return getRandomDot();</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function checkForSquares(newDot) {</span></p>
+<p class="p1"><span class="s1">                let squaresFormed = 0;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Get all dots belonging to the current player that aren't already used in squares</span></p>
+<p class="p1"><span class="s1">                const playerDots = selectedDots.filter(dot =&gt;</span></p>
+<p class="p1"><span class="s1">                    dot.player === currentPlayer &amp;&amp; !usedDots.has(dot.id)</span></p>
+<p class="p1"><span class="s1">                );</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // We need at least 4 dots to form a square</span></p>
+<p class="p1"><span class="s1">                if (playerDots.length &lt; 4) return 0;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Check all possible combinations of 4 dots</span></p>
+<p class="p1"><span class="s1">                for (let i = 0; i &lt; playerDots.length; i++) {</span></p>
+<p class="p1"><span class="s1">                    for (let j = i + 1; j &lt; playerDots.length; j++) {</span></p>
+<p class="p1"><span class="s1">                        for (let k = j + 1; k &lt; playerDots.length; k++) {</span></p>
+<p class="p1"><span class="s1">                            for (let l = k + 1; l &lt; playerDots.length; l++) {</span></p>
+<p class="p1"><span class="s1">                                const dots = [playerDots[i], playerDots[j], playerDots[k], playerDots[l]];</span></p>
+<p class="p1"><span class="s1">                               </span></p>
+<p class="p1"><span class="s1">                                // Check if these 4 dots form a square</span></p>
+<p class="p1"><span class="s1">                                if (isSquare(dots)) {</span></p>
+<p class="p1"><span class="s1">                                    // Check if any of these dots are already used in a square</span></p>
+<p class="p1"><span class="s1">                                    const anyDotUsed = dots.some(dot =&gt; usedDots.has(dot.id));</span></p>
+<p class="p1"><span class="s1">                                   </span></p>
+<p class="p1"><span class="s1">                                    if (!anyDotUsed) {</span></p>
+<p class="p1"><span class="s1">                                        // Calculate the side length of the square</span></p>
+<p class="p1"><span class="s1">                                        const sideLength = calculateSideLength(dots[0], dots[1]);</span></p>
+<p class="p1"><span class="s1">                                       </span></p>
+<p class="p1"><span class="s1">                                        // Calculate points based on square size (area)</span></p>
+<p class="p1"><span class="s1">                                        const points = sideLength * sideLength;</span></p>
+<p class="p1"><span class="s1">                                       </span></p>
+<p class="p1"><span class="s1">                                        // Draw lines connecting the dots</span></p>
+<p class="p1"><span class="s1">                                        drawSquareLines(dots);</span></p>
+<p class="p1"><span class="s1">                                       </span></p>
+<p class="p1"><span class="s1">                                        // Mark these dots as used</span></p>
+<p class="p1"><span class="s1">                                        dots.forEach(dot =&gt; {</span></p>
+<p class="p1"><span class="s1">                                            usedDots.add(dot.id);</span></p>
+<p class="p1"><span class="s1">                                            dot.element.classList.add('used');</span></p>
+<p class="p1"><span class="s1">                                        });</span></p>
+<p class="p1"><span class="s1">                                       </span></p>
+<p class="p1"><span class="s1">                                        // Add square to the list</span></p>
+<p class="p1"><span class="s1">                                        squares.push({</span></p>
+<p class="p1"><span class="s1">                                            dots: dots,</span></p>
+<p class="p1"><span class="s1">                                            player: currentPlayer,</span></p>
+<p class="p1"><span class="s1">                                            sideLength: sideLength</span></p>
+<p class="p1"><span class="s1">                                        });</span></p>
+<p class="p1"><span class="s1">                                       </span></p>
+<p class="p1"><span class="s1">                                        squaresFormed += points;</span></p>
+<p class="p1"><span class="s1">                                    }</span></p>
+<p class="p1"><span class="s1">                                }</span></p>
+<p class="p1"><span class="s1">                            }</span></p>
+<p class="p1"><span class="s1">                        }</span></p>
+<p class="p1"><span class="s1">                    }</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Round to 1 decimal place</span></p>
+<p class="p1"><span class="s1">                return Math.round(squaresFormed * 10) / 10;</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function isGameOver() {</span></p>
+<p class="p1"><span class="s1">                // Check if there are any possible squares that can be formed</span></p>
+<p class="p1"><span class="s1">                // This is a simplified check - we just see if there are enough unused dots</span></p>
+<p class="p1"><span class="s1">                const unusedDots = selectedDots.filter(dot =&gt; !usedDots.has(dot.id));</span></p>
+<p class="p1"><span class="s1">                const player1Dots = unusedDots.filter(dot =&gt; dot.player === 1);</span></p>
+<p class="p1"><span class="s1">                const player2Dots = unusedDots.filter(dot =&gt; dot.player === 2);</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // If either player has fewer than 4 unused dots, they can't form a square</span></p>
+<p class="p1"><span class="s1">                if (player1Dots.length &lt; 4 &amp;&amp; player2Dots.length &lt; 4) {</span></p>
+<p class="p1"><span class="s1">                    // If there are still unselected dots, the game can continue</span></p>
+<p class="p1"><span class="s1">                    if (availableDots.length &gt; 0) {</span></p>
+<p class="p1"><span class="s1">                        return false;</span></p>
+<p class="p1"><span class="s1">                    }</span></p>
+<p class="p1"><span class="s1">                    return true;</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // If all dots are used, the game is over</span></p>
+<p class="p1"><span class="s1">                if (availableDots.length === 0) {</span></p>
+<p class="p1"><span class="s1">                    return true;</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Check if any possible square can be formed with the remaining dots</span></p>
+<p class="p1"><span class="s1">                // This is a more complex check that would require testing all possible combinations</span></p>
+<p class="p1"><span class="s1">                // For simplicity, we'll just return false here</span></p>
+<p class="p1"><span class="s1">                return false;</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function endGame() {</span></p>
+<p class="p1"><span class="s1">                gameActive = false;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Determine the winner</span></p>
+<p class="p1"><span class="s1">                let winnerMessage;</span></p>
+<p class="p1"><span class="s1">                if (scores[0] &gt; scores[1]) {</span></p>
+<p class="p1"><span class="s1">                    winnerMessage = `Player 1 wins with a score of ${scores[0].toFixed(1)}!`;</span></p>
+<p class="p1"><span class="s1">                } else if (scores[1] &gt; scores[0]) {</span></p>
+<p class="p1"><span class="s1">                    winnerMessage = `${gameMode === 'computer' ? 'Computer' : 'Player 2'} wins with a score of ${scores[1].toFixed(1)}!`;</span></p>
+<p class="p1"><span class="s1">                } else {</span></p>
+<p class="p1"><span class="s1">                    winnerMessage = `It's a tie! Both players scored ${scores[0].toFixed(1)}.`;</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Show game over screen</span></p>
+<p class="p1"><span class="s1">                winnerText.textContent = winnerMessage;</span></p>
+<p class="p1"><span class="s1">                gameStatus.textContent = "Game Over";</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Show game over screen after a short delay</span></p>
+<p class="p1"><span class="s1">                setTimeout(() =&gt; {</span></p>
+<p class="p1"><span class="s1">                    gameBoard.classList.add('hidden');</span></p>
+<p class="p1"><span class="s1">                    gameOverScreen.classList.remove('hidden');</span></p>
+<p class="p1"><span class="s1">                }, 1500);</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function isSquare(dots) {</span></p>
+<p class="p1"><span class="s1">                if (dots.length !== 4) return false;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Calculate all pairwise distances</span></p>
+<p class="p1"><span class="s1">                const distances = [];</span></p>
+<p class="p1"><span class="s1">                for (let i = 0; i &lt; dots.length; i++) {</span></p>
+<p class="p1"><span class="s1">                    for (let j = i + 1; j &lt; dots.length; j++) {</span></p>
+<p class="p1"><span class="s1">                        distances.push(calculateDistance(dots[i], dots[j]));</span></p>
+<p class="p1"><span class="s1">                    }</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Sort distances</span></p>
+<p class="p1"><span class="s1">                distances.sort((a, b) =&gt; a - b);</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // For a square, we should have 4 equal sides and 2 equal diagonals</span></p>
+<p class="p1"><span class="s1">                // So the first 4 distances should be equal (sides) and the last 2 should be equal (diagonals)</span></p>
+<p class="p1"><span class="s1">                const sides = distances.slice(0, 4);</span></p>
+<p class="p1"><span class="s1">                const diagonals = distances.slice(4, 6);</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Check if all sides are equal and all diagonals are equal</span></p>
+<p class="p1"><span class="s1">                const allSidesEqual = sides.every(side =&gt; Math.abs(side - sides[0]) &lt; 0.001);</span></p>
+<p class="p1"><span class="s1">                const allDiagonalsEqual = Math.abs(diagonals[0] - diagonals[1]) &lt; 0.001;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // For a square, diagonals should be sqrt(2) times the side length</span></p>
+<p class="p1"><span class="s1">                const diagonalToSideRatio = diagonals[0] / sides[0];</span></p>
+<p class="p1"><span class="s1">                const isRatioCorrect = Math.abs(diagonalToSideRatio - Math.sqrt(2)) &lt; 0.001;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                return allSidesEqual &amp;&amp; allDiagonalsEqual &amp;&amp; isRatioCorrect;</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function calculateDistance(dot1, dot2) {</span></p>
+<p class="p1"><span class="s1">                const dx = dot1.x - dot2.x;</span></p>
+<p class="p1"><span class="s1">                const dy = dot1.y - dot2.y;</span></p>
+<p class="p1"><span class="s1">                return Math.sqrt(dx * dx + dy * dy);</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function calculateSideLength(dot1, dot2) {</span></p>
+<p class="p1"><span class="s1">                const dx = dot1.x - dot2.x;</span></p>
+<p class="p1"><span class="s1">                const dy = dot1.y - dot2.y;</span></p>
+<p class="p1"><span class="s1">                return Math.sqrt(dx * dx + dy * dy);</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function drawSquareLines(dots) {</span></p>
+<p class="p1"><span class="s1">                // Sort dots to form a proper square (clockwise or counterclockwise)</span></p>
+<p class="p1"><span class="s1">                const sortedDots = sortDotsInOrder(dots);</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Draw lines between consecutive dots</span></p>
+<p class="p1"><span class="s1">                for (let i = 0; i &lt; sortedDots.length; i++) {</span></p>
+<p class="p1"><span class="s1">                    const dot1 = sortedDots[i];</span></p>
+<p class="p1"><span class="s1">                    const dot2 = sortedDots[(i + 1) % sortedDots.length];</span></p>
+<p class="p1"><span class="s1">                    drawLine(dot1, dot2);</span></p>
+<p class="p1"><span class="s1">                }</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function sortDotsInOrder(dots) {</span></p>
+<p class="p1"><span class="s1">                // Find the center of the dots</span></p>
+<p class="p1"><span class="s1">                const centerX = dots.reduce((sum, dot) =&gt; sum + dot.x, 0) / dots.length;</span></p>
+<p class="p1"><span class="s1">                const centerY = dots.reduce((sum, dot) =&gt; sum + dot.y, 0) / dots.length;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Sort dots by their angle from the center</span></p>
+<p class="p1"><span class="s1">                return [...dots].sort((a, b) =&gt; {</span></p>
+<p class="p1"><span class="s1">                    const angleA = Math.atan2(a.y - centerY, a.x - centerX);</span></p>
+<p class="p1"><span class="s1">                    const angleB = Math.atan2(b.y - centerY, b.x - centerX);</span></p>
+<p class="p1"><span class="s1">                    return angleA - angleB;</span></p>
+<p class="p1"><span class="s1">                });</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function drawLine(dot1, dot2) {</span></p>
+<p class="p1"><span class="s1">                const x1 = dot1.x * spacing;</span></p>
+<p class="p1"><span class="s1">                const y1 = dot1.y * spacing;</span></p>
+<p class="p1"><span class="s1">                const x2 = dot2.x * spacing;</span></p>
+<p class="p1"><span class="s1">                const y2 = dot2.y * spacing;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Calculate line length and angle</span></p>
+<p class="p1"><span class="s1">                const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);</span></p>
+<p class="p1"><span class="s1">                const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Create line element</span></p>
+<p class="p1"><span class="s1">                const line = document.createElement('div');</span></p>
+<p class="p1"><span class="s1">                line.className = `square-line player${currentPlayer}`;</span></p>
+<p class="p1"><span class="s1">                line.style.width = `${length}px`;</span></p>
+<p class="p1"><span class="s1">                line.style.height = `${lineThickness}px`;</span></p>
+<p class="p1"><span class="s1">                line.style.left = `${x1}px`;</span></p>
+<p class="p1"><span class="s1">                line.style.top = `${y1}px`;</span></p>
+<p class="p1"><span class="s1">                line.style.transformOrigin = '0 50%';</span></p>
+<p class="p1"><span class="s1">                line.style.transform = `rotate(${angle}deg)`;</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                // Add animation</span></p>
+<p class="p1"><span class="s1">                line.style.opacity = '0';</span></p>
+<p class="p1"><span class="s1">                gridContainer.appendChild(line);</span></p>
+<p class="p1"><span class="s1">               </span></p>
+<p class="p1"><span class="s1">                setTimeout(() =&gt; {</span></p>
+<p class="p1"><span class="s1">                    line.style.opacity = '1';</span></p>
+<p class="p1"><span class="s1">                }, 10);</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function updatePlayerTurn() {</span></p>
+<p class="p1"><span class="s1">                player1Card.classList.toggle('active', currentPlayer === 1);</span></p>
+<p class="p1"><span class="s1">                player2Card.classList.toggle('active', currentPlayer === 2);</span></p>
+<p class="p1"><span class="s1">                gameStatus.textContent = `${currentPlayer === 1 ? 'Player 1' : (gameMode === 'computer' ? 'Computer' : 'Player 2')}'s Turn`;</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            function resetGame() {</span></p>
+<p class="p1"><span class="s1">                currentPlayer = 1;</span></p>
+<p class="p1"><span class="s1">                scores = [0.0, 0.0];</span></p>
+<p class="p1"><span class="s1">                player1Score.textContent = "0.0";</span></p>
+<p class="p1"><span class="s1">                player2Score.textContent = "0.0";</span></p>
+<p class="p1"><span class="s1">                gameActive = true;</span></p>
+<p class="p1"><span class="s1">                createGrid();</span></p>
+<p class="p1"><span class="s1">                updatePlayerTurn();</span></p>
+<p class="p1"><span class="s1">            }</span></p>
+<p class="p1"><span class="s1">           </span></p>
+<p class="p1"><span class="s1">            // Set default game mode</span></p>
+<p class="p1"><span class="s1">            setGameMode('twoPlayer');</span></p>
+<p class="p1"><span class="s1">        });</span></p>
+<p class="p1"><span class="s1">    &lt;/script&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+</body>
+</html>

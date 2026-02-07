@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Square Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #2b2b2b; }
+    .grid-board-container, .instructions-box { background-color: #1a1a1a; }
+    .dot {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: white;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 2;
+    }
+    .dot.player1 { background-color: #3b82f6; }
+    .dot.player2 { background-color: #ef4444; }
+    .line {
+      position: absolute;
+      background-color: white;
+      transform-origin: left center;
+      z-index: 1;
+    }
+    .line.player1 { background-color: rgba(59, 130, 246, 0.5); } /* lighter blue */
+    .line.player2 { background-color: rgba(239, 68, 68, 0.5); }  /* lighter red */
+    .active {
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+      transform: scale(1.05);
+    }
+    .game-over-modal, .leaderboard-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .game-over-modal.active, .leaderboard-modal.active {
+      display: flex;
+    }
+    .highlight-score { background-color: rgba(255, 255, 0, 0.2); }
+    .grid-board-container { position: relative; }
+    .grid-container { position: relative; }
+  </style>
+</head>
+<body>
+  <div class="flex justify-between mb-8">
+    <div id="player1Card" class="player-card bg-gradient-to-br from-blue-500 to-blue-700 p-4 text-white w-48 text-center active">
+      <h2 class="text-xl font-bold">Player 1</h2>
+      <p class="text-3xl font-bold mt-2" id="player1Score">0</p>
+      <div class="mt-2 text-sm">Blue</div>
+      <div id="player1Timer" class="turn-timer text-white mt-2 hidden">Turn time: 00:00</div>
+    </div>
+    <div class="bg-white bg-opacity-10 rounded-lg p-3 text-white text-center">
+      <p id="gameStatus" class="font-medium">Player 1's Turn</p>
+      <button id="resetButton" class="mt-2 bg-white text-gray-800 px-4 py-1 rounded-full font-medium hover:bg-gray-100 transition">Reset Game</button>
+    </div>
+    <div id="player2Card" class="player-card bg-gradient-to-br from-red-500 to-red-700 p-4 text-white w-48 text-center">
+      <h2 class="text-xl font-bold">Player 2</h2>
+      <p class="text-3xl font-bold mt-2" id="player2Score">0</p>
+      <div class="mt-2 text-sm">Red</div>
+      <div id="player2Timer" class="turn-timer text-white mt-2 hidden">Turn time: 00:00</div>
+    </div>
+  </div>
+  <div class="flex justify-center mb-6">
+    <div class="bg-black bg-opacity-20 rounded-lg p-6 grid-board-container">
+      <div id="gridContainer" class="grid-container"></div>
+    </div>
+  </div>
+  <div class="text-white text-center bg-black bg-opacity-20 p-4 rounded-lg instructions-box">
+    <h3 class="font-bold mb-2">How to Play</h3>
+    <p>Players take turns selecting dots. When a player's selections form a square of any size, they earn points based on the square size.</p>
+    <p class="mt-2"><span class="font-bold">Scoring:</span> 1×1 square = 1 point, 2×2 square = 4 points, 3×3 square = 9 points, etc.</p>
+    <p class="mt-2"><span class="font-bold">Game End:</span> The game ends when all dots are selected.</p>
+  </div>
+<script>
+const gridSize = 8;
+const spacing = 80;
+const dotSize = 20;
+const lineThickness = Math.round(dotSize / 3);
+let currentPlayer = 1;
+let scores = [0, 0];
+let selectedDots = [];
+let lines = [];
+let totalDots = gridSize * gridSize;
+let selectedDotCount = 0;
+let turnStartTime = Date.now();
+let timerInterval;
+
+const gridContainer = document.getElementById('gridContainer');
+const player1Score = document.getElementById('player1Score');
+const player2Score = document.getElementById('player2Score');
+const player1Card = document.getElementById('player1Card');
+const player2Card = document.getElementById('player2Card');
+const gameStatus = document.getElementById('gameStatus');
+const resetButton = document.getElementById('resetButton');
+const player1Timer = document.getElementById('player1Timer');
+const player2Timer = document.getElementById('player2Timer');
+
+function createGrid() {
+  gridContainer.innerHTML = '';
+  selectedDots = [];
+  lines = [];
+  selectedDotCount = 0;
+
+  gridContainer.style.width = `${(gridSize - 1) * spacing}px`;
+  gridContainer.style.height = `${(gridSize - 1) * spacing}px`;
+
+  for (let y = 0; y < gridSize; y++) {
+    for (let x = 0; x < gridSize; x++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.style.left = `${x * spacing}px`;
+      dot.style.top = `${y * spacing}px`;
+      dot.dataset.x = x;
+      dot.dataset.y = y;
+      dot.dataset.id = `${x}-${y}`;
+      dot.addEventListener('click', function () {
+        if (!this.classList.contains('player1') && !this.classList.contains('player2')) {
+          this.classList.add(`player${currentPlayer}`);
+          selectedDotCount++;
+          selectedDots.push({ x: parseInt(this.dataset.x), y: parseInt(this.dataset.y), id: this.dataset.id, player: currentPlayer });
+          checkForSquares();
+          if (selectedDotCount === totalDots) {
+            alert('Game Over!');
+          } else {
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            updatePlayerTurn();
+            resetTurnTimer();
+          }
+        }
+      });
+      gridContainer.appendChild(dot);
+    }
+  }
+}
+
+function checkForSquares() {
+  const playerDots = selectedDots.filter(dot => dot.player === currentPlayer);
+  if (playerDots.length < 4) return;
+
+  for (let i = 0; i < playerDots.length; i++) {
+    for (let j = i + 1; j < playerDots.length; j++) {
+      for (let k = j + 1; k < playerDots.length; k++) {
+        for (let l = k + 1; l < playerDots.length; l++) {
+          const dots = [playerDots[i], playerDots[j], playerDots[k], playerDots[l]];
+          if (isSquare(dots)) {
+            const squareKey = dots.map(d => d.id).sort().join(',');
+            if (!lines.includes(squareKey)) {
+              lines.push(squareKey);
+              const sideLength = Math.sqrt((dots[0].x - dots[1].x) ** 2 + (dots[0].y - dots[1].y) ** 2);
+              const points = Math.round(sideLength * sideLength);
+              scores[currentPlayer - 1] += points;
+              player1Score.textContent = scores[0];
+              player2Score.textContent = scores[1];
+              drawSquare(dots);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+function isSquare(dots) {
+  const [a, b, c, d] = dots;
+  const dist = (p1, p2) => Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
+  const dists = [
+    dist(a, b), dist(a, c), dist(a, d),
+    dist(b, c), dist(b, d), dist(c, d)
+  ].sort((x, y) => x - y);
+
+  return dists[0] > 0 &&
+         dists[0] === dists[1] &&
+         dists[1] === dists[2] &&
+         dists[2] === dists[3] &&
+         dists[4] === dists[5] &&
+         dists[4] === 2 * dists[0];
+}
+
+function drawSquare(dots) {
+  const sortedDots = sortDotsInOrder(dots);
+  for (let i = 0; i < sortedDots.length; i++) {
+    const dot1 = sortedDots[i];
+    const dot2 = sortedDots[(i + 1) % sortedDots.length];
+    drawLine(dot1, dot2);
+  }
+}
+
+function sortDotsInOrder(dots) {
+  const centerX = dots.reduce((sum, dot) => sum + dot.x, 0) / dots.length;
+  const centerY = dots.reduce((sum, dot) => sum + dot.y, 0) / dots.length;
+  return [...dots].sort((a, b) => {
+    const angleA = Math.atan2(a.y - centerY, a.x - centerX);
+    const angleB = Math.atan2(b.y - centerY, b.x - centerX);
+    return angleA - angleB;
+  });
+}
+
+function drawLine(dot1, dot2) {
+  const x1 = dot1.x * spacing;
+  const y1 = dot1.y * spacing;
+  const x2 = dot2.x * spacing;
+  const y2 = dot2.y * spacing;
+  const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+  const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+
+  const line = document.createElement('div');
+  line.className = `line player${currentPlayer}`;
+  line.style.width = `${length}px`;
+  line.style.height = `${lineThickness}px`;
+  line.style.left = `${x1}px`;
+  line.style.top = `${y1}px`;
+  line.style.transform = `rotate(${angle}deg)`;
+
+  gridContainer.appendChild(line);
+}
+
+function startTurnTimer() {
+  turnStartTime = Date.now();
+  updateTimerDisplay();
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimerDisplay, 1000);
+}
+
+function resetTurnTimer() {
+  turnStartTime = Date.now();
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+  const elapsedTime = Date.now() - turnStartTime;
+  const seconds = Math.floor((elapsedTime / 1000) % 60);
+  const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+  const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+  player1Timer.classList.add('hidden');
+  player2Timer.classList.add('hidden');
+
+  if (currentPlayer === 1) {
+    player1Timer.innerHTML = `<span class="text-blue-400">Turn time:</span> ${formattedTime}`;
+    player1Timer.classList.remove('hidden');
+  } else {
+    player2Timer.innerHTML = `<span class="text-red-400">Turn time:</span> ${formattedTime}`;
+    player2Timer.classList.remove('hidden');
+  }
+}
+
+function updatePlayerTurn() {
+  player1Card.classList.toggle('active', currentPlayer === 1);
+  player2Card.classList.toggle('active', currentPlayer === 2);
+  gameStatus.textContent = `Player ${currentPlayer}'s Turn`;
+}
+
+resetButton.addEventListener('click', () => {
+  createGrid();
+  startTurnTimer();
+});
+
+createGrid();
+startTurnTimer();
+</script>
+</body>
+</html>

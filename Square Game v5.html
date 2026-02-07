@@ -1,0 +1,553 @@
+<div class="flex justify-between mb-8">
+        <div id="player1Card" class="player-card bg-gradient-to-br from-blue-500 to-blue-700 p-4 text-white w-48 text-center active">
+            <h2 class="text-xl font-bold">Player 1</h2>
+            <p class="text-3xl font-bold mt-2" id="player1Score">0</p>
+            <div class="mt-2 text-sm">Blue</div>
+        </div>
+        
+        <div class="bg-white bg-opacity-10 rounded-lg p-3 text-white text-center">
+            <p id="gameStatus" class="font-medium">Player 1's Turn</p>
+            <button id="resetButton" class="mt-2 bg-white text-gray-800 px-4 py-1 rounded-full font-medium hover:bg-gray-100 transition">Reset Game</button>
+            <button id="viewLeaderboardBtn" class="mt-2 bg-transparent border border-white text-white px-4 py-1 rounded-full font-medium hover:bg-white hover:bg-opacity-10 transition">View Leaderboard</button>
+        </div>
+        
+        <div id="player2Card" class="player-card bg-gradient-to-br from-red-500 to-red-700 p-4 text-white w-48 text-center">
+            <h2 class="text-xl font-bold">Player 2</h2>
+            <p class="text-3xl font-bold mt-2" id="player2Score">0</p>
+            <div class="mt-2 text-sm">Red</div>
+        </div>
+    </div>
+    
+    <!-- Turn Timer -->
+    <div id="turnTimer" class="turn-timer mb-6">
+        Turn time: 00:00
+    </div>
+    
+    <div class="flex justify-center mb-6">
+        <div class="bg-black bg-opacity-20 rounded-lg p-6 grid-board-container">
+            <div id="gridContainer" class="grid-container"></div>
+        </div>
+    </div>
+    
+    <div class="text-white text-center bg-black bg-opacity-20 p-4 rounded-lg">
+        <h3 class="font-bold mb-2">How to Play</h3>
+        <p>Players take turns selecting dots. When a player's selections form a square of any size, they earn points based on the square size.</p>
+        <p class="mt-2"><span class="font-bold">Scoring:</span> 1×1 square = 1 point, 2×2 square = 4 points, 3×3 square = 9 points, etc.</p>
+        <p class="mt-2"><span class="font-bold">Game End:</span> The game ends when all dots are selected.</p>
+    </div>
+</div>
+
+<!-- Game Over Modal -->
+<div id="gameOverModal" class="game-over-modal">
+    <div class="game-over-content text-white text-center">
+        <h2 class="text-4xl font-bold mb-4 winner-text">Game Over!</h2>
+        <div id="winnerInfo" class="text-2xl mb-6">Player 1 wins!</div>
+        <div class="flex justify-between mb-8">
+            <div class="bg-blue-500 bg-opacity-20 p-4 rounded-lg w-5/12">
+                <h3 class="font-bold">Player 1</h3>
+                <p id="finalScore1" class="text-3xl font-bold">0</p>
+            </div>
+            <div class="bg-red-500 bg-opacity-20 p-4 rounded-lg w-5/12">
+                <h3 class="font-bold">Player 2</h3>
+                <p id="finalScore2" class="text-3xl font-bold">0</p>
+            </div>
+        </div>
+        
+        <!-- High Score Entry Form (initially hidden) -->
+        <div id="highScoreForm" class="bg-white bg-opacity-10 p-4 rounded-lg mb-6 hidden">
+            <h3 class="font-bold text-yellow-300 mb-2">New High Score!</h3>
+            <p class="mb-4">You made it to the top 10! Enter your name:</p>
+            <div class="flex">
+                <input type="text" id="playerNameInput" maxlength="15" placeholder="Your name" class="flex-grow px-4 py-2 rounded-l-lg bg-black bg-opacity-50 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
+                <button id="submitScoreBtn" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-r-lg transition">Submit</button>
+            </div>
+        </div>
+        
+        <div class="flex justify-center gap-4">
+            <button id="playAgainBtn" class="bg-white text-gray-800 px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition">
+                Play Again
+            </button>
+            <button id="showLeaderboardBtn" class="bg-transparent border border-white text-white px-6 py-2 rounded-full font-bold hover:bg-white hover:bg-opacity-10 transition">
+                Leaderboard
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Leaderboard Modal -->
+<div id="leaderboardModal" class="leaderboard-modal">
+    <div class="leaderboard-content text-white">
+        <h2 class="text-3xl font-bold mb-6 text-center">Top 10 Scores</h2>
+        <div class="overflow-x-auto">
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Name</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardTableBody">
+                    <!-- Leaderboard entries will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+        <div class="flex justify-center mt-6">
+            <button id="closeLeaderboardBtn" class="bg-white text-gray-800 px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Game settings
+        const gridSize = 8; // 8x8 grid as requested
+        const spacing = 80; // Keep the same spacing
+        const dotSize = 20;
+        const lineThickness = 6;
+        
+        // Game state
+        let currentPlayer = 1;
+        let scores = [0, 0];
+        let selectedDots = [];
+        let lines = [];
+        let totalDots = gridSize * gridSize;
+        let selectedDotCount = 0;
+        let winnerPlayer = null;
+        let winnerScore = 0;
+        
+        // Timer variables
+        let turnStartTime = Date.now();
+        let timerInterval;
+        
+        // DOM Elements
+        const gridContainer = document.getElementById('gridContainer');
+        const player1Score = document.getElementById('player1Score');
+        const player2Score = document.getElementById('player2Score');
+        const player1Card = document.getElementById('player1Card');
+        const player2Card = document.getElementById('player2Card');
+        const gameStatus = document.getElementById('gameStatus');
+        const resetButton = document.getElementById('resetButton');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const winnerInfo = document.getElementById('winnerInfo');
+        const finalScore1 = document.getElementById('finalScore1');
+        const finalScore2 = document.getElementById('finalScore2');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const turnTimer = document.getElementById('turnTimer');
+        const highScoreForm = document.getElementById('highScoreForm');
+        const playerNameInput = document.getElementById('playerNameInput');
+        const submitScoreBtn = document.getElementById('submitScoreBtn');
+        const viewLeaderboardBtn = document.getElementById('viewLeaderboardBtn');
+        const showLeaderboardBtn = document.getElementById('showLeaderboardBtn');
+        const leaderboardModal = document.getElementById('leaderboardModal');
+        const leaderboardTableBody = document.getElementById('leaderboardTableBody');
+        const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
+        
+        // Set grid container size
+        gridContainer.style.width = `${(gridSize - 1) * spacing}px`;
+        gridContainer.style.height = `${(gridSize - 1) * spacing}px`;
+        
+        // Initialize game
+        createGrid();
+        startTurnTimer();
+        
+        // Reset button
+        resetButton.addEventListener('click', resetGame);
+        
+        // Play again button
+        playAgainBtn.addEventListener('click', function() {
+            gameOverModal.classList.remove('active');
+            resetGame();
+        });
+        
+        // Submit score button
+        submitScoreBtn.addEventListener('click', function() {
+            const playerName = playerNameInput.value.trim() || "Anonymous";
+            addHighScore(playerName, winnerScore);
+            highScoreForm.classList.add('hidden');
+            showLeaderboard();
+        });
+        
+        // View leaderboard buttons
+        viewLeaderboardBtn.addEventListener('click', showLeaderboard);
+        showLeaderboardBtn.addEventListener('click', showLeaderboard);
+        
+        // Close leaderboard button
+        closeLeaderboardBtn.addEventListener('click', function() {
+            leaderboardModal.classList.remove('active');
+        });
+        
+        function createGrid() {
+            gridContainer.innerHTML = '';
+            selectedDots = [];
+            lines = [];
+            selectedDotCount = 0;
+            
+            // Create dots
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'dot';
+                    dot.style.left = `${x * spacing}px`;
+                    dot.style.top = `${y * spacing}px`;
+                    dot.dataset.x = x;
+                    dot.dataset.y = y;
+                    dot.dataset.id = `${x}-${y}`;
+                    
+                    dot.addEventListener('click', function() {
+                        if (!this.classList.contains('player1') && !this.classList.contains('player2')) {
+                            this.classList.add(`player${currentPlayer}`);
+                            selectedDotCount++;
+                            
+                            const dotInfo = {
+                                x: parseInt(this.dataset.x),
+                                y: parseInt(this.dataset.y),
+                                id: this.dataset.id,
+                                player: currentPlayer
+                            };
+                            
+                            selectedDots.push(dotInfo);
+                            checkForSquares();
+                            
+                            // Check if game is over
+                            if (selectedDotCount === totalDots) {
+                                endGame();
+                            } else {
+                                // Switch player
+                                currentPlayer = currentPlayer === 1 ? 2 : 1;
+                                updatePlayerTurn();
+                                resetTurnTimer();
+                            }
+                        }
+                    });
+                    
+                    gridContainer.appendChild(dot);
+                }
+            }
+        }
+        
+        function checkForSquares() {
+            // Get all dots belonging to the current player
+            const playerDots = selectedDots.filter(dot => dot.player === currentPlayer);
+            
+            // We need at least 4 dots to form a square
+            if (playerDots.length < 4) return;
+            
+            let squaresFound = 0;
+            
+            // Check all possible combinations of 4 dots
+            for (let i = 0; i < playerDots.length; i++) {
+                for (let j = i + 1; j < playerDots.length; j++) {
+                    for (let k = j + 1; k < playerDots.length; k++) {
+                        for (let l = k + 1; l < playerDots.length; l++) {
+                            const dots = [playerDots[i], playerDots[j], playerDots[k], playerDots[l]];
+                            
+                            // Check if these 4 dots form a square
+                            if (isSquare(dots)) {
+                                // Check if we've already counted this square
+                                const squareKey = dots.map(d => d.id).sort().join(',');
+                                if (!lines.includes(squareKey)) {
+                                    lines.push(squareKey);
+                                    
+                                    // Calculate the side length
+                                    const sideLength = Math.sqrt(
+                                        Math.pow(dots[0].x - dots[1].x, 2) + 
+                                        Math.pow(dots[0].y - dots[1].y, 2)
+                                    );
+                                    
+                                    // Calculate points (area of square)
+                                    const points = Math.round(sideLength * sideLength);
+                                    
+                                    // Update score
+                                    scores[currentPlayer - 1] += points;
+                                    
+                                    // Draw the square
+                                    drawSquare(dots);
+                                    
+                                    squaresFound++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (squaresFound > 0) {
+                // Update score display
+                player1Score.textContent = scores[0];
+                player2Score.textContent = scores[1];
+                
+                // Update game status
+                gameStatus.textContent = `Player ${currentPlayer} formed ${squaresFound} square${squaresFound > 1 ? 's' : ''}!`;
+            }
+        }
+        
+        function isSquare(dots) {
+            if (dots.length !== 4) return false;
+            
+            // Calculate all pairwise distances
+            const distances = [];
+            for (let i = 0; i < dots.length; i++) {
+                for (let j = i + 1; j < dots.length; j++) {
+                    const dx = dots[i].x - dots[j].x;
+                    const dy = dots[i].y - dots[j].y;
+                    distances.push(Math.sqrt(dx * dx + dy * dy));
+                }
+            }
+            
+            // Sort distances
+            distances.sort((a, b) => a - b);
+            
+            // For a square, we should have:
+            // - 4 equal sides (first 4 distances)
+            // - 2 equal diagonals (last 2 distances)
+            
+            // Check if all sides are equal
+            const side = distances[0];
+            if (Math.abs(distances[1] - side) > 0.001 || 
+                Math.abs(distances[2] - side) > 0.001 || 
+                Math.abs(distances[3] - side) > 0.001) {
+                return false;
+            }
+            
+            // Check if both diagonals are equal
+            if (Math.abs(distances[4] - distances[5]) > 0.001) {
+                return false;
+            }
+            
+            // Check if diagonal length is correct (should be sqrt(2) * side)
+            const expectedDiagonal = side * Math.sqrt(2);
+            if (Math.abs(distances[4] - expectedDiagonal) > 0.1) {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function drawSquare(dots) {
+            // Sort dots to form a proper square (clockwise or counterclockwise)
+            const sortedDots = sortDotsInOrder(dots);
+            
+            // Draw lines between consecutive dots
+            for (let i = 0; i < sortedDots.length; i++) {
+                const dot1 = sortedDots[i];
+                const dot2 = sortedDots[(i + 1) % sortedDots.length];
+                drawLine(dot1, dot2);
+            }
+        }
+        
+        function sortDotsInOrder(dots) {
+            // Find the center of the dots
+            const centerX = dots.reduce((sum, dot) => sum + dot.x, 0) / dots.length;
+            const centerY = dots.reduce((sum, dot) => sum + dot.y, 0) / dots.length;
+            
+            // Sort dots by their angle from the center
+            return [...dots].sort((a, b) => {
+                const angleA = Math.atan2(a.y - centerY, a.x - centerX);
+                const angleB = Math.atan2(b.y - centerY, b.x - centerX);
+                return angleA - angleB;
+            });
+        }
+        
+        function drawLine(dot1, dot2) {
+            const x1 = dot1.x * spacing;
+            const y1 = dot1.y * spacing;
+            const x2 = dot2.x * spacing;
+            const y2 = dot2.y * spacing;
+            
+            // Calculate line length and angle
+            const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+            
+            // Create line element
+            const line = document.createElement('div');
+            line.className = `line player${currentPlayer}`;
+            line.style.width = `${length}px`;
+            line.style.height = `${lineThickness}px`;
+            line.style.left = `${x1}px`;
+            line.style.top = `${y1}px`;
+            line.style.transform = `rotate(${angle}deg)`;
+            
+            gridContainer.appendChild(line);
+        }
+        
+        function updatePlayerTurn() {
+            player1Card.classList.toggle('active', currentPlayer === 1);
+            player2Card.classList.toggle('active', currentPlayer === 2);
+            gameStatus.textContent = `Player ${currentPlayer}'s Turn`;
+        }
+        
+        function endGame() {
+            // Stop the timer
+            stopTurnTimer();
+            
+            // Update final scores in the modal
+            finalScore1.textContent = scores[0];
+            finalScore2.textContent = scores[1];
+            
+            // Determine winner
+            if (scores[0] > scores[1]) {
+                winnerPlayer = 1;
+                winnerScore = scores[0];
+                winnerInfo.innerHTML = `<span class="text-blue-400">Player 1</span> wins with <span class="text-yellow-300">${scores[0]}</span> points!`;
+            } else if (scores[1] > scores[0]) {
+                winnerPlayer = 2;
+                winnerScore = scores[1];
+                winnerInfo.innerHTML = `<span class="text-red-400">Player 2</span> wins with <span class="text-yellow-300">${scores[1]}</span> points!`;
+            } else {
+                winnerPlayer = null;
+                winnerScore = scores[0]; // Both scores are the same
+                winnerInfo.innerHTML = `It's a tie! Both players scored <span class="text-yellow-300">${scores[0]}</span> points.`;
+            }
+            
+            // Check if the winner's score is in the top 10
+            if (winnerPlayer !== null && isHighScore(winnerScore)) {
+                // Show high score form
+                highScoreForm.classList.remove('hidden');
+                playerNameInput.focus();
+            } else {
+                highScoreForm.classList.add('hidden');
+            }
+            
+            // Show game over modal with animation
+            gameOverModal.classList.add('active');
+            
+            // Update game status
+            gameStatus.textContent = "Game Over";
+        }
+        
+        function resetGame() {
+            currentPlayer = 1;
+            scores = [0, 0];
+            player1Score.textContent = "0";
+            player2Score.textContent = "0";
+            createGrid();
+            updatePlayerTurn();
+            resetTurnTimer();
+        }
+        
+        // Timer functions
+        function startTurnTimer() {
+            turnStartTime = Date.now();
+            updateTimerDisplay();
+            
+            // Clear any existing interval
+            if (timerInterval) clearInterval(timerInterval);
+            
+            // Update timer every second
+            timerInterval = setInterval(updateTimerDisplay, 1000);
+        }
+        
+        function resetTurnTimer() {
+            turnStartTime = Date.now();
+            updateTimerDisplay();
+        }
+        
+        function stopTurnTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+        
+        function updateTimerDisplay() {
+            const elapsedTime = Date.now() - turnStartTime;
+            const seconds = Math.floor((elapsedTime / 1000) % 60);
+            const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+            
+            // Format time as MM:SS
+            const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Update timer display with player color
+            const playerColor = currentPlayer === 1 ? 'text-blue-400' : 'text-red-400';
+            turnTimer.innerHTML = `<span class="${playerColor}">Player ${currentPlayer}'s</span> turn time: ${formattedTime}`;
+            
+            // Add pulsing effect when time gets longer
+            if (minutes >= 1) {
+                turnTimer.classList.add('animate-pulse');
+            } else {
+                turnTimer.classList.remove('animate-pulse');
+            }
+        }
+        
+        // Leaderboard functions
+        function getLeaderboard() {
+            let leaderboard = localStorage.getItem('dotGridLeaderboard');
+            if (leaderboard) {
+                return JSON.parse(leaderboard);
+            } else {
+                // Initialize with some default scores
+                const defaultScores = [
+                    { name: "Champion", score: 100 },
+                    { name: "Expert", score: 85 },
+                    { name: "Master", score: 70 },
+                    { name: "Pro", score: 55 },
+                    { name: "Skilled", score: 40 }
+                ];
+                localStorage.setItem('dotGridLeaderboard', JSON.stringify(defaultScores));
+                return defaultScores;
+            }
+        }
+        
+        function saveLeaderboard(leaderboard) {
+            localStorage.setItem('dotGridLeaderboard', JSON.stringify(leaderboard));
+        }
+        
+        function isHighScore(score) {
+            const leaderboard = getLeaderboard();
+            
+            // If we have less than 10 scores, it's automatically a high score
+            if (leaderboard.length < 10) return true;
+            
+            // Check if the score is higher than the lowest score in the leaderboard
+            return score > leaderboard[leaderboard.length - 1].score;
+        }
+        
+        function addHighScore(name, score) {
+            let leaderboard = getLeaderboard();
+            
+            // Add the new score
+            leaderboard.push({ name, score });
+            
+            // Sort by score (descending)
+            leaderboard.sort((a, b) => b.score - a.score);
+            
+            // Keep only the top 10
+            if (leaderboard.length > 10) {
+                leaderboard = leaderboard.slice(0, 10);
+            }
+            
+            // Save the updated leaderboard
+            saveLeaderboard(leaderboard);
+            
+            return leaderboard;
+        }
+        
+        function showLeaderboard() {
+            const leaderboard = getLeaderboard();
+            leaderboardTableBody.innerHTML = '';
+            
+            // Add each score to the table
+            leaderboard.forEach((entry, index) => {
+                const row = document.createElement('tr');
+                
+                // Highlight the row if it's the current winner's score
+                if (entry.score === winnerScore && entry.name === playerNameInput.value.trim()) {
+                    row.classList.add('highlight-score');
+                }
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${entry.name}</td>
+                    <td>${entry.score}</td>
+                `;
+                leaderboardTableBody.appendChild(row);
+            });
+            
+            // Show the leaderboard modal
+            leaderboardModal.classList.add('active');
+        }
+    });
+</script>

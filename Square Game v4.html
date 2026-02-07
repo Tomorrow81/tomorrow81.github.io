@@ -1,0 +1,422 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.6">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 16.0px Times; -webkit-text-stroke: #000000}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 16.0px Times; -webkit-text-stroke: #000000; min-height: 19.0px}
+    span.s1 {font-kerning: none}
+  </style>
+</head>
+<body>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>&lt;div class="flex justify-between mb-8"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div id="player1Card" class="player-card bg-gradient-to-br from-blue-500 to-blue-700 p-4 text-white w-48 text-center active"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;h2 class="text-xl font-bold"&gt;Player 1&lt;/h2&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;p class="text-3xl font-bold mt-2" id="player1Score"&gt;0&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div class="mt-2 text-sm"&gt;Blue&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div class="bg-white bg-opacity-10 rounded-lg p-3 text-white text-center"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;p id="gameStatus" class="font-medium"&gt;Player 1's Turn&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;button id="resetButton" class="mt-2 bg-white text-gray-800 px-4 py-1 rounded-full font-medium hover:bg-gray-100 transition"&gt;Reset Game&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div id="player2Card" class="player-card bg-gradient-to-br from-red-500 to-red-700 p-4 text-white w-48 text-center"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;h2 class="text-xl font-bold"&gt;Player 2&lt;/h2&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;p class="text-3xl font-bold mt-2" id="player2Score"&gt;0&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div class="mt-2 text-sm"&gt;Red&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">    </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;!-- Turn Timer --&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div id="turnTimer" class="turn-timer mb-6"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>Turn time: 00:00</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">    </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="flex justify-center mb-6"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div class="bg-black bg-opacity-20 rounded-lg p-6 grid-board-container"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div id="gridContainer" class="grid-container"&gt;&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">    </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="text-white text-center bg-black bg-opacity-20 p-4 rounded-lg"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;h3 class="font-bold mb-2"&gt;How to Play&lt;/h3&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;p&gt;Players take turns selecting dots. When a player's selections form a square of any size, they earn points based on the square size.&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;p class="mt-2"&gt;&lt;span class="font-bold"&gt;Scoring:&lt;/span&gt; 1×1 square = 1 point, 2×2 square = 4 points, 3×3 square = 9 points, etc.&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;p class="mt-2"&gt;&lt;span class="font-bold"&gt;Game End:&lt;/span&gt; The game ends when all dots are selected.&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;!-- Game Over Modal --&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div id="gameOverModal" class="game-over-modal"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="game-over-content text-white text-center"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;h2 class="text-4xl font-bold mb-4 winner-text"&gt;Game Over!&lt;/h2&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div id="winnerInfo" class="text-2xl mb-6"&gt;Player 1 wins!&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div class="flex justify-between mb-8"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div class="bg-blue-500 bg-opacity-20 p-4 rounded-lg w-5/12"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;h3 class="font-bold"&gt;Player 1&lt;/h3&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;p id="finalScore1" class="text-3xl font-bold"&gt;0&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div class="bg-red-500 bg-opacity-20 p-4 rounded-lg w-5/12"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;h3 class="font-bold"&gt;Player 2&lt;/h3&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;p id="finalScore2" class="text-3xl font-bold"&gt;0&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div class="flex justify-center gap-4"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;button id="playAgainBtn" class="bg-white text-gray-800 px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>Play Again</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;script&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>document.addEventListener('DOMContentLoaded', function() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// Game settings</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const gridSize = 8; // 8x8 grid as requested</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const spacing = 80; // Keep the same spacing</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const dotSize = 20;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const lineThickness = 6;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// Game state</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let currentPlayer = 1;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let scores = [0, 0];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let selectedDots = [];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let lines = [];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let totalDots = gridSize * gridSize;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let selectedDotCount = 0;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// Timer variables</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let turnStartTime = Date.now();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let timerInterval;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// DOM Elements</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const gridContainer = document.getElementById('gridContainer');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const player1Score = document.getElementById('player1Score');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const player2Score = document.getElementById('player2Score');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const player1Card = document.getElementById('player1Card');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const player2Card = document.getElementById('player2Card');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const gameStatus = document.getElementById('gameStatus');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const resetButton = document.getElementById('resetButton');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const gameOverModal = document.getElementById('gameOverModal');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const winnerInfo = document.getElementById('winnerInfo');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const finalScore1 = document.getElementById('finalScore1');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const finalScore2 = document.getElementById('finalScore2');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const playAgainBtn = document.getElementById('playAgainBtn');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const turnTimer = document.getElementById('turnTimer');</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// Set grid container size</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>gridContainer.style.width = `${(gridSize - 1) * spacing}px`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>gridContainer.style.height = `${(gridSize - 1) * spacing}px`;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// Initialize game</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>createGrid();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>startTurnTimer();</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// Reset button</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>resetButton.addEventListener('click', resetGame);</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// Play again button</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>playAgainBtn.addEventListener('click', function() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>gameOverModal.classList.remove('active');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>resetGame();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>});</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function createGrid() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>gridContainer.innerHTML = '';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>selectedDots = [];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>lines = [];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>selectedDotCount = 0;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Create dots</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>for (let y = 0; y &lt; gridSize; y++) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>for (let x = 0; x &lt; gridSize; x++) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const dot = document.createElement('div');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>dot.className = 'dot';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>dot.style.left = `${x * spacing}px`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>dot.style.top = `${y * spacing}px`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>dot.dataset.x = x;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>dot.dataset.y = y;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>dot.dataset.id = `${x}-${y}`;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                    </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>dot.addEventListener('click', function() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>if (!this.classList.contains('player1') &amp;&amp; !this.classList.contains('player2')) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>this.classList.add(`player${currentPlayer}`);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>selectedDotCount++;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>const dotInfo = {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>x: parseInt(this.dataset.x),</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>y: parseInt(this.dataset.y),</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>id: this.dataset.id,</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>player: currentPlayer</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>};</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>selectedDots.push(dotInfo);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>checkForSquares();</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>// Check if game is over</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>if (selectedDotCount === totalDots) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>endGame();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>} else {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>// Switch player</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>currentPlayer = currentPlayer === 1 ? 2 : 1;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>updatePlayerTurn();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>resetTurnTimer();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>});</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                    </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>gridContainer.appendChild(dot);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function checkForSquares() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Get all dots belonging to the current player</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const playerDots = selectedDots.filter(dot =&gt; dot.player === currentPlayer);</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// We need at least 4 dots to form a square</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (playerDots.length &lt; 4) return;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>let squaresFound = 0;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Check all possible combinations of 4 dots</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>for (let i = 0; i &lt; playerDots.length; i++) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>for (let j = i + 1; j &lt; playerDots.length; j++) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>for (let k = j + 1; k &lt; playerDots.length; k++) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>for (let l = k + 1; l &lt; playerDots.length; l++) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>const dots = [playerDots[i], playerDots[j], playerDots[k], playerDots[l]];</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>// Check if these 4 dots form a square</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>if (isSquare(dots)) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>// Check if we've already counted this square</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>const squareKey = dots.map(d =&gt; d.id).sort().join(',');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>if (!lines.includes(squareKey)) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                    </span>lines.push(squareKey);</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                                    </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                    </span>// Calculate the side length</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                    </span>const sideLength = Math.sqrt(</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                        </span>Math.pow(dots[0].x - dots[1].x, 2) +<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                        </span>Math.pow(dots[0].y - dots[1].y, 2)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                    </span>);</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                                    </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                    </span>// Calculate points (area of square)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                    </span>const points = Math.round(sideLength * sideLength);</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                                    </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                    </span>// Update score</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                    </span>scores[currentPlayer - 1] += points;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                                    </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                    </span>// Draw the square</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                    </span>drawSquare(dots);</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                                    </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                    </span>squaresFound++;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (squaresFound &gt; 0) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>// Update score display</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>player1Score.textContent = scores[0];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>player2Score.textContent = scores[1];</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>// Update game status</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>gameStatus.textContent = `Player ${currentPlayer} formed ${squaresFound} square${squaresFound &gt; 1 ? 's' : ''}!`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function isSquare(dots) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (dots.length !== 4) return false;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Calculate all pairwise distances</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const distances = [];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>for (let i = 0; i &lt; dots.length; i++) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>for (let j = i + 1; j &lt; dots.length; j++) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const dx = dots[i].x - dots[j].x;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const dy = dots[i].y - dots[j].y;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>distances.push(Math.sqrt(dx * dx + dy * dy));</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Sort distances</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>distances.sort((a, b) =&gt; a - b);</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// For a square, we should have:</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// - 4 equal sides (first 4 distances)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// - 2 equal diagonals (last 2 distances)</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Check if all sides are equal</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const side = distances[0];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (Math.abs(distances[1] - side) &gt; 0.001 ||<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>Math.abs(distances[2] - side) &gt; 0.001 ||<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>Math.abs(distances[3] - side) &gt; 0.001) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>return false;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Check if both diagonals are equal</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (Math.abs(distances[4] - distances[5]) &gt; 0.001) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>return false;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Check if diagonal length is correct (should be sqrt(2) * side)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const expectedDiagonal = side * Math.sqrt(2);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (Math.abs(distances[4] - expectedDiagonal) &gt; 0.1) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>return false;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>return true;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function drawSquare(dots) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Sort dots to form a proper square (clockwise or counterclockwise)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const sortedDots = sortDotsInOrder(dots);</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Draw lines between consecutive dots</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>for (let i = 0; i &lt; sortedDots.length; i++) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const dot1 = sortedDots[i];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const dot2 = sortedDots[(i + 1) % sortedDots.length];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>drawLine(dot1, dot2);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function sortDotsInOrder(dots) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Find the center of the dots</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const centerX = dots.reduce((sum, dot) =&gt; sum + dot.x, 0) / dots.length;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const centerY = dots.reduce((sum, dot) =&gt; sum + dot.y, 0) / dots.length;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Sort dots by their angle from the center</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>return [...dots].sort((a, b) =&gt; {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const angleA = Math.atan2(a.y - centerY, a.x - centerX);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const angleB = Math.atan2(b.y - centerY, b.x - centerX);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>return angleA - angleB;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>});</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function drawLine(dot1, dot2) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const x1 = dot1.x * spacing;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const y1 = dot1.y * spacing;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const x2 = dot2.x * spacing;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const y2 = dot2.y * spacing;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Calculate line length and angle</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Create line element</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const line = document.createElement('div');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>line.className = `line player${currentPlayer}`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>line.style.width = `${length}px`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>line.style.height = `${lineThickness}px`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>line.style.left = `${x1}px`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>line.style.top = `${y1}px`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>line.style.transform = `rotate(${angle}deg)`;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>gridContainer.appendChild(line);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function updatePlayerTurn() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>player1Card.classList.toggle('active', currentPlayer === 1);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>player2Card.classList.toggle('active', currentPlayer === 2);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>gameStatus.textContent = `Player ${currentPlayer}'s Turn`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function endGame() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Stop the timer</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>stopTurnTimer();</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Update final scores in the modal</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>finalScore1.textContent = scores[0];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>finalScore2.textContent = scores[1];</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Determine winner</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>let winnerMessage;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (scores[0] &gt; scores[1]) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>winnerMessage = `Player 1 wins!`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>winnerInfo.innerHTML = `&lt;span class="text-blue-400"&gt;Player 1&lt;/span&gt; wins with &lt;span class="text-yellow-300"&gt;${scores[0]}&lt;/span&gt; points!`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>} else if (scores[1] &gt; scores[0]) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>winnerMessage = `Player 2 wins!`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>winnerInfo.innerHTML = `&lt;span class="text-red-400"&gt;Player 2&lt;/span&gt; wins with &lt;span class="text-yellow-300"&gt;${scores[1]}&lt;/span&gt; points!`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>} else {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>winnerMessage = `It's a tie!`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>winnerInfo.innerHTML = `It's a tie! Both players scored &lt;span class="text-yellow-300"&gt;${scores[0]}&lt;/span&gt; points.`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Show game over modal with animation</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>gameOverModal.classList.add('active');</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Update game status</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>gameStatus.textContent = "Game Over";</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function resetGame() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>currentPlayer = 1;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>scores = [0, 0];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>player1Score.textContent = "0";</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>player2Score.textContent = "0";</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>createGrid();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>updatePlayerTurn();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>resetTurnTimer();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// Timer functions</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function startTurnTimer() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>turnStartTime = Date.now();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>updateTimerDisplay();</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Clear any existing interval</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (timerInterval) clearInterval(timerInterval);</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Update timer every second</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>timerInterval = setInterval(updateTimerDisplay, 1000);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function resetTurnTimer() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>turnStartTime = Date.now();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>updateTimerDisplay();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function stopTurnTimer() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (timerInterval) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>clearInterval(timerInterval);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>timerInterval = null;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function updateTimerDisplay() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const elapsedTime = Date.now() - turnStartTime;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const seconds = Math.floor((elapsedTime / 1000) % 60);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Format time as MM:SS</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Update timer display with player color</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const playerColor = currentPlayer === 1 ? 'text-blue-400' : 'text-red-400';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>turnTimer.innerHTML = `&lt;span class="${playerColor}"&gt;Player ${currentPlayer}'s&lt;/span&gt; turn time: ${formattedTime}`;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Add pulsing effect when time gets longer</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (minutes &gt;= 1) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>turnTimer.classList.add('animate-pulse');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>} else {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>turnTimer.classList.remove('animate-pulse');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// Check if game is over when all dots are selected</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function checkGameOver() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (selectedDotCount === totalDots) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>endGame();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>return true;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>return false;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>});</span></p>
+<p class="p1"><span class="s1">&lt;/script&gt;</span></p>
+</body>
+</html>
