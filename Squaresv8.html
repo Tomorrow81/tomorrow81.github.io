@@ -35,8 +35,8 @@
     }
     .dot {
       position: absolute;
-      width: 4vw;
-      height: 4vw;
+      width: clamp(14px, 3.8vmin, 30px);
+      height: clamp(14px, 3.8vmin, 30px);
       max-width: 30px;
       max-height: 30px;
       border-radius: 50%;
@@ -76,11 +76,14 @@
     }
     .grid-board-container {
       position: relative;
-      width: 90vw;
-      height: 90vw;
+      width: min(92vw, 68vh);
+      height: min(92vw, 68vh);
       max-width: 720px;
       max-height: 720px;
+      min-width: 260px;
+      min-height: 260px;
       overflow: hidden;
+      box-sizing: border-box;
     }
     .grid-container { position: relative; }
     .mode-buttons { margin-bottom: 20px; }
@@ -108,11 +111,21 @@
     .player-card {
       filter: brightness(50%);
       transition: filter 0.3s ease;
-      width: 192px;
+      width: min(192px, 31vw);
+      min-width: 120px;
     }
     .player-card.active {
       filter: brightness(100%);
       transform: none;
+    }
+    @media (max-width: 640px), (max-height: 760px) {
+      .grid-board-container {
+        width: min(94vw, 56vh);
+        height: min(94vw, 56vh);
+      }
+      .player-card {
+        width: min(172px, 44vw);
+      }
     }
 
     /* Popup overlay and animation */
@@ -147,13 +160,13 @@
     </label>
   </div>
   <div class="flex flex-col items-center">
-    <div class="flex justify-between mb-8 w-full max-w-3xl">
+    <div class="flex flex-wrap justify-center gap-3 mb-8 w-full max-w-3xl px-3">
       <div id="player1Card" class="player-card bg-gradient-to-br from-blue-500 to-blue-700 p-4 text-white text-center active">
         <h2 class="text-xl font-bold">Player 1</h2>
         <p class="text-3xl font-bold mt-2" id="player1Score">0</p>
         <div id="player1Timer" class="turn-timer text-white mt-2 hidden">Turn time: 00:00</div>
       </div>
-      <div class="player-card active w-48 bg-white bg-opacity-10 rounded-lg p-3 text-white text-center">
+      <div class="player-card active bg-white bg-opacity-10 rounded-lg p-3 text-white text-center">
         <p id="gameStatus" class="font-medium">Player 1's Turn</p>
         <button id="resetButton" class="mt-2 bg-white text-gray-800 px-4 py-1 rounded-full font-medium hover:bg-gray-100 transition">Reset Game</button>
       </div>
@@ -528,27 +541,6 @@ resetButton.addEventListener('click', () => {
   createGrid();
   startTurnTimer();
 });
-// Add pvpSettings show/hide on mode switch
-pvpMode.addEventListener('click', () => {
-  mode = "pvp";
-  pvpMode.classList.add('active');
-  cpuMode.classList.remove('active');
-  pvpSettings.classList.remove('hidden');
-  createGrid();
-  startTurnTimer();
-});
-cpuMode.addEventListener('click', () => {
-  mode = "cpu";
-  cpuMode.classList.add('active');
-  pvpMode.classList.remove('active');
-  pvpSettings.classList.add('hidden');
-  createGrid();
-  startTurnTimer();
-});
-createGrid();
-startTurnTimer();
-
-// Show/hide difficulty buttons when switching modes
 const difficultyButtons = document.getElementById('difficultyButtons');
 const difficultyEasy = document.getElementById('difficultyEasy');
 const difficultyMedium = document.getElementById('difficultyMedium');
@@ -563,26 +555,21 @@ const difficultyHard = document.getElementById('difficultyHard');
   });
 });
 
-// Modify existing mode listeners to show/hide difficulty selector
-pvpMode.addEventListener('click', () => {
-  mode = "pvp";
-  pvpMode.classList.add('active');
-  cpuMode.classList.remove('active');
-  // Hide difficulty buttons in PVP mode
-  difficultyButtons.classList.add('hidden');
+function setMode(nextMode) {
+  mode = nextMode;
+  const isCpu = mode === "cpu";
+  pvpMode.classList.toggle('active', !isCpu);
+  cpuMode.classList.toggle('active', isCpu);
+  pvpSettings.classList.toggle('hidden', isCpu);
+  difficultyButtons.classList.toggle('hidden', !isCpu);
   createGrid();
   startTurnTimer();
-});
+}
 
-cpuMode.addEventListener('click', () => {
-  mode = "cpu";
-  cpuMode.classList.add('active');
-  pvpMode.classList.remove('active');
-  // Show difficulty buttons when CPU mode is selected
-  difficultyButtons.classList.remove('hidden');
-  createGrid();
-  startTurnTimer();
-});
+pvpMode.addEventListener('click', () => setMode("pvp"));
+cpuMode.addEventListener('click', () => setMode("cpu"));
+
+setMode("pvp");
 
 </script>
 <script>
