@@ -27,3 +27,10 @@ This folder documents how to wire `SnakeEngine` into an iPhone SwiftUI app targe
 - `GameBoardView.swift`
 
 Copy these into your Xcode iOS app target and replace the default SwiftUI files.
+
+You can copy them automatically:
+
+```bash
+cd "/Users/macbookpro23/Library/Mobile Documents/com~apple~CloudDocs/Documents/Russ/Square Game/snake-ios-native"
+./scripts/bootstrap_ios_target.sh "/ABSOLUTE/PATH/TO/YOUR/XCODE_APP_SOURCE_FOLDER"
+```

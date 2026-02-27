@@ -6,6 +6,7 @@ Current status:
 - Step 1 complete: game spec (`SPEC.md`)
 - Step 2 complete: clean module layout
 - Step 3 complete: testable Swift game engine (`SnakeEngine`)
+- Step 4 complete: SwiftUI iOS app template files for wiring
 
 ## Layout
 
@@ -19,6 +20,10 @@ Current status:
   - Unit tests for rules and state transitions.
 - `ios-app-template/`
   - SwiftUI app scaffold notes for wiring the engine into an iOS target.
+- `SETUP_XCODE.md`
+  - Exact checklist to connect everything once Xcode is installed.
+- `scripts/bootstrap_ios_target.sh`
+  - Copies template Swift files into your new Xcode app target folder.
 
 ## Run Local Tests
 
@@ -29,8 +34,7 @@ swift test
 
 ## Next Steps
 
-1. Create an iOS SwiftUI app target in Xcode.
-2. Add this package as a local dependency.
-3. Build `GameViewModel` + `GameBoardView` around `SnakeGame`.
-4. Add swipe input, pause/restart, and high-score persistence.
-5. Run on a physical iPhone and tune controls/tick speed.
+1. Run through `SETUP_XCODE.md`.
+2. Launch on simulator and iPhone.
+3. Add high-score persistence (`UserDefaults`).
+4. Tune speed curve and control sensitivity.
